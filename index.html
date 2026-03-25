@@ -619,7 +619,7 @@ document.getElementById('auth-pass').addEventListener('keydown',e=>{if(e.key==='
 const savedTheme=localStorage.getItem('crm_theme')||'dark';
 document.documentElement.setAttribute('data-theme',savedTheme);
 document.getElementById('theme-btn').textContent=savedTheme==='dark'?'🌙':'☀️';
-function toggleTheme(){const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('crm_theme',t);document.getElementById('theme-btn').textContent=t==='dark'?'🌙':'☀️';if(allClients.length){renderChartsGeral(filt('geral'));renderDesemp();}}
+function toggleTheme(){const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('crm_theme',t);document.getElementById('theme-btn').textContent=t==='dark'?'🌙':'☀️';if(allClients.length){renderChartsGeral(allClients.filter(x=>x._lk==='clientes'));renderDesemp();}}
 
 async function fetchList(key){const{id,label}=LISTS[key];let page=0,tasks=[];while(true){const r=await fetch(`https://api.clickup.com/api/v2/list/${id}/task?include_closed=true&page=${page}&limit=100`,{headers:{Authorization:API_KEY}});if(!r.ok)throw new Error(`${label}: ${r.status}`);const d=await r.json();const b=d.tasks||[];tasks=tasks.concat(b);if(b.length<100)break;page++;}return tasks.map(t=>norm(t,key));}
 
@@ -684,7 +684,43 @@ function allcf(t){
 function norm(t,lk){const _rawFields=t.custom_fields||[];const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcf(t,'qtd_dependentes_menor_13')||'—',email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—',_rawFields};}
 function nStatus(s){if(!s)return'novo lead';const sl=String(s).toLowerCase().trim();if(sl.includes('ativo')||sl==='active')return'ativo';if(sl.includes('próximo')||sl.includes('proximo')||sl.includes('1 ano'))return'proximo';if(sl.includes('aniversário')||sl.includes('aniversario'))return'aniversario';if(sl.includes('novo')||sl.includes('lead'))return'novo lead';return sl;}
 
-async function loadAll(){const btn=document.getElementById('btn-refresh');btn.disabled=true;btn.textContent='⏳';document.getElementById('global-err').style.display='none';try{const[rec,fup,cli]=await Promise.all([fetchList('recomendados'),fetchList('followup'),fetchList('clientes')]);allClients=[...rec,...fup,...cli];document.getElementById('cnt-all').textContent=allClients.length;document.getElementById('cnt-rec').textContent=rec.length;document.getElementById('cnt-fup').textContent=fup.length;document.getElementById('cnt-cli').textContent=cli.length;const now=new Date();document.getElementById('upd-time').textContent='Ao vivo · '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});document.getElementById('tabs-date').textContent=now.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});populateFilters();renderAll();}catch(e){const b=document.getElementById('global-err');b.style.display='block';b.textContent='⚠️ '+e.message;}finally{btn.disabled=false;btn.textContent='↻ Atualizar';}}
+async function loadAll(){
+  const btn=document.getElementById('btn-refresh');
+  btn.disabled=true;btn.textContent='⏳';
+  document.getElementById('global-err').style.display='none';
+  try{
+    const[rec,fup,cli]=await Promise.all([fetchList('recomendados'),fetchList('followup'),fetchList('clientes')]);
+    allClients=[...rec,...fup,...cli];
+
+    // Aplica captados locais: garante que tasks captadas permaneçam em clientes
+    // mesmo antes do ClickUp confirmar a movimentação
+    captados.forEach(id=>{
+      const idx=allClients.findIndex(x=>x._id===id);
+      if(idx>-1 && allClients[idx]._lk==='recomendados'){
+        allClients[idx]._lk='clientes';
+        allClients[idx]._ll='Clientes';
+        allClients[idx]._li='👤';
+      }
+    });
+
+    // Recalcula contagens após aplicar captados
+    const recCount = allClients.filter(x=>x._lk==='recomendados').length;
+    const fupCount = allClients.filter(x=>x._lk==='followup').length;
+    const cliCount = allClients.filter(x=>x._lk==='clientes').length;
+    document.getElementById('cnt-all').textContent=allClients.length;
+    document.getElementById('cnt-rec').textContent=recCount;
+    document.getElementById('cnt-fup').textContent=fupCount;
+    document.getElementById('cnt-cli').textContent=cliCount;
+
+    const now=new Date();
+    document.getElementById('upd-time').textContent='Ao vivo · '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('tabs-date').textContent=now.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+    populateFilters();
+    renderGeralRender();renderRec();renderFup();renderCli();renderDesemp();
+  }catch(e){
+    const b=document.getElementById('global-err');b.style.display='block';b.textContent='⚠️ '+e.message;
+  }finally{btn.disabled=false;btn.textContent='↻ Atualizar';}
+}
 
 function populateFilters(){const cids=[...new Set(allClients.map(x=>x.cidade).filter(x=>x&&x!=='—'))].sort();const profs=[...new Set(allClients.map(x=>x.prof).filter(x=>x&&x!=='—'))].sort();['g-cidade','r-cidade','f-cidade','c-cidade'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML='<option value="">Todas as cidades</option>'+cids.map(c=>`<option>${c}</option>`).join('');el.value=v;});['r-prof','c-prof'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML='<option value="">Todas as profissões</option>'+profs.map(p=>`<option>${p}</option>`).join('');el.value=v;});}
 
@@ -692,18 +728,20 @@ function filt(tab){let c=allClients;const lkMap={recomendados:'recomendados',rec
 const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
 
 function renderAll(){
-  // Restaura clientes captados: move visualmente para lista clientes
-  captados.forEach(id=>{
-    const idx=allClients.findIndex(x=>x._id===id);
-    if(idx>-1&&allClients[idx]._lk==='recomendados'){
-      allClients[idx]._lk='clientes';allClients[idx]._ll='Clientes';allClients[idx]._li='👤';
-    }
-  });
-  renderGeral();renderRec();renderFup();renderCli();renderDesemp();
+  renderGeralRender();renderRec();renderFup();renderCli();renderDesemp();
+}
+function updateTabCounts(){
+  const recC=allClients.filter(x=>x._lk==='recomendados').length;
+  const fupC=allClients.filter(x=>x._lk==='followup').length;
+  const cliC=allClients.filter(x=>x._lk==='clientes').length;
+  document.getElementById('cnt-all').textContent=allClients.length;
+  document.getElementById('cnt-rec').textContent=recC;
+  document.getElementById('cnt-fup').textContent=fupC;
+  document.getElementById('cnt-cli').textContent=cliC;
 }
 
-function setGF(f,btn){gFilter=f;document.querySelectorAll('#page-geral .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGeral();}
-function renderGeral(){const allF=filt('geral');const cli=allClients.filter(x=>x._lk==='clientes');const rec=allClients.filter(x=>x._lk==='recomendados');const rCart=cli.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-geral').innerHTML=kpi('Clientes Consolidados',cli.length,'Carteira ativa','kblue','👤')+kpi('Leads Recomendados',rec.length,'Em abordagem','kpurple','⭐')+kpi('Clientes Ativos',cli.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Renda Carteira',brl(rCart),'Soma renda clientes','korange','💰');renderChartsGeral(cli);renderTableG(allF);}
+function setGF(f,btn){gFilter=f;document.querySelectorAll('#page-geral .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGeralRender();}
+function renderGeralRender(){const allF=filt('geral');const cli=allClients.filter(x=>x._lk==='clientes');const rec=allClients.filter(x=>x._lk==='recomendados');const rCart=cli.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-geral').innerHTML=kpi('Clientes Consolidados',cli.length,'Carteira ativa','kblue','👤')+kpi('Leads Recomendados',rec.length,'Em abordagem','kpurple','⭐')+kpi('Clientes Ativos',cli.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Renda Carteira',brl(rCart),'Soma renda clientes','korange','💰');renderChartsGeral(cli);renderTableG(allF);}
 
 function renderChartsGeral(cli){const dark=document.documentElement.getAttribute('data-theme')==='dark';const alta=cli.filter(x=>String(x.perfil).toLowerCase().includes('alta')).length;const med=cli.filter(x=>String(x.perfil).toLowerCase().match(/m[eé]dia/)).length;const out=Math.max(0,cli.length-alta-med);document.getElementById('dp-tot').textContent=cli.length;if(chPerfil)chPerfil.destroy();chPerfil=mkDnt('ch-perfil',['Alta Renda','Média Renda','Outros'],[alta,med,out],['#388bfd','#3fb950','#6e7681']);mkLeg('leg-perfil',[{l:'Alta Renda',v:alta,p:pc(alta,cli.length),c:'#388bfd'},{l:'Média Renda',v:med,p:pc(med,cli.length),c:'#3fb950'},{l:'Outros',v:out,p:pc(out,cli.length),c:'#6e7681'}],'perfil');const ativo=cli.filter(x=>x.status==='ativo').length,prox=cli.filter(x=>x.status==='proximo').length,aniv=cli.filter(x=>x.status==='aniversario').length,outst=Math.max(0,cli.length-ativo-prox-aniv);document.getElementById('do-tot').textContent=cli.length;if(chOrigem)chOrigem.destroy();chOrigem=mkDnt('ch-origem',['Ativos','Próx. Renovação','Aniversário','Outros'],[ativo,prox,aniv,outst],['#3fb950','#d29922','#a371f7','#6e7681']);mkLeg('leg-origem',[{l:'Ativos',v:ativo,p:pc(ativo,cli.length),c:'#3fb950'},{l:'Próx. Renovação',v:prox,p:pc(prox,cli.length),c:'#d29922'},{l:'Aniversário',v:aniv,p:pc(aniv,cli.length),c:'#a371f7'},{l:'Outros',v:outst,p:pc(outst,cli.length),c:'#6e7681'}],'status');profList('prof-geral',cli);}
 
@@ -725,9 +763,32 @@ function openP(id){const c=allClients.find(x=>x._id===id);if(!c)return;document.
 function closePanel(){document.getElementById('overlay').classList.remove('open');document.getElementById('panel').classList.remove('open');document.body.style.overflow='';}
 function sPTab(n,btn){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));document.getElementById('tc-'+n).classList.add('active');btn.classList.add('active');}
 
-function drillChart(tipo){const cli=allClients.filter(x=>x._lk==='clientes');openDrill(tipo==='perfil'?'Perfil de Renda — Clientes':'Status das Apólices — Clientes',cli);}
-function drillLeg(tipo,label){const cli=allClients.filter(x=>x._lk==='clientes');let r=[];if(tipo==='perfil'){const key=label.split(' ')[0].toLowerCase();r=cli.filter(x=>String(x.perfil).toLowerCase().includes(key));}else if(tipo==='status'){const m={'Ativos':'ativo','Próx. Renovação':'proximo','Aniversário':'aniversario'};const st=m[label];r=st?cli.filter(x=>x.status===st):cli.filter(x=>!['ativo','proximo','aniversario'].includes(x.status));}openDrill(label+' ('+r.length+')',r);}
-function drillProf(prof){openDrill('Profissão: '+prof,allClients.filter(x=>x._lk==='clientes'&&x.prof===prof));}
+function drillChart(tipo){
+  // Clique no centro do donut — abre todos os clientes
+  const cli=allClients.filter(x=>x._lk==='clientes');
+  openDrill(tipo==='perfil'?'Perfil de Renda — Clientes':'Status das Apólices — Clientes',cli);
+}
+function drillLeg(tipo,label){
+  const cli=allClients.filter(x=>x._lk==='clientes');
+  let r=[];
+  if(tipo==='perfil'){
+    // Filtra pelo perfil exato clicado na legenda
+    if(label==='Alta Renda') r=cli.filter(x=>String(x.perfil).toLowerCase().includes('alta'));
+    else if(label==='Média Renda') r=cli.filter(x=>String(x.perfil).toLowerCase().match(/m[eé]dia/));
+    else r=cli.filter(x=>!String(x.perfil).toLowerCase().includes('alta')&&!String(x.perfil).toLowerCase().match(/m[eé]dia/));
+  } else if(tipo==='status'){
+    const m={'Ativos':'ativo','Próx. Renovação':'proximo','Aniversário':'aniversario'};
+    const st=m[label];
+    if(st) r=cli.filter(x=>x.status===st);
+    else r=cli.filter(x=>!['ativo','proximo','aniversario'].includes(x.status));
+  }
+  if(!r.length) r=cli; // fallback
+  openDrill(`${label} — ${r.length} cliente(s)`,r);
+}
+function drillProf(prof){
+  const r=allClients.filter(x=>x._lk==='clientes'&&x.prof===prof);
+  openDrill(`Profissão: ${prof} — ${r.length} cliente(s)`,r);
+}
 function openDrill(title,rows){document.getElementById('drill-title').textContent=`${title} (${rows.length})`;document.getElementById('drill-body').innerHTML=rows.length?`<table><thead><tr><th>Cliente</th><th>Origem</th><th>Profissão</th><th>Renda</th><th>Perfil</th><th>Status</th></tr></thead><tbody>${rows.map(x=>`<tr onclick="closeDrill();openP('${x._id}')" style="cursor:pointer"><td>${avCell(x)}</td><td>${chOr(x._lk)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td></tr>`).join('')}</tbody></table>`:empty();document.getElementById('drill-ov').classList.add('open');}
 function closeDrill(){document.getElementById('drill-ov').classList.remove('open');}
 document.getElementById('drill-ov').addEventListener('click',function(e){if(e.target===this)closeDrill();});
@@ -797,38 +858,30 @@ async function confirmarCaptacao(){
   if(!c){ closeCapModal(); return; }
 
   try {
-    // ── 1. Busca task atual para pegar IDs dos campos ──────────
+    // ── 1. Busca task para obter IDs reais dos campos ──────────
     const taskData = await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}?custom_fields=true`, 'GET');
     const campos = taskData.custom_fields || [];
 
-    // ── 2. Atualiza campos de data via endpoint específico ─────
-    const camposDatas = [
-      { nome: 'data_contrato',            val: dateToTs(dataContrato) },
-      { nome: 'data_inicio_vigencia',     val: dateToTs(inicioVig)    },
-      { nome: 'data_fim_vigencia',        val: dateToTs(fimVig)       },
-      { nome: 'data_aniversario_apolice', val: dateToTs(inicioVig)    },
-    ];
-
-    for(const campo of camposDatas){
-      const cf = campos.find(f => norm_str(f.name) === norm_str(campo.nome));
-      if(cf && campo.val){
-        try {
-          await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}/field/${cf.id}`, 'POST', { value: campo.val });
-        } catch(e){ console.warn('Campo não atualizado:', campo.nome, e.message); }
-      } else {
-        console.warn('Campo não encontrado:', campo.nome, '| campos disponíveis:', campos.map(f=>f.name));
-      }
+    // Helper: atualiza campo pelo nome normalizado
+    async function setCF(nome, valor){
+      const cf = campos.find(f => norm_str(f.name) === norm_str(nome));
+      if(cf && valor !== null && valor !== undefined){
+        try{ await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}/field/${cf.id}`, 'POST', { value: valor }); }
+        catch(e){ console.warn('setCF falhou:', nome, e.message); }
+      } else { console.warn('Campo nao encontrado:', nome, '| disponiveis:', campos.map(f=>f.name).join(', ')); }
     }
 
-    // ── 3. Move task para lista Clientes ───────────────────────
-    // Endpoint correto do ClickUp para mover entre listas
-    try {
-      await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'PUT', {
-        list_id: LISTS.clientes.id
-      });
-    } catch(e){ console.warn('Move task:', e.message); }
+    // ── 2. Salva datas do contrato ─────────────────────────────
+    await setCF('data_contrato',            dateToTs(dataContrato));
+    await setCF('data_inicio_vigencia',     dateToTs(inicioVig));
+    await setCF('data_fim_vigencia',        dateToTs(fimVig));
+    await setCF('data_aniversario_apolice', dateToTs(inicioVig));
 
-    // ── 4. Atualiza estado local ────────────────────────────────
+    // ── 3. Marca cliente_captado = true ────────────────────────
+    // Dispara a Automation #2 do ClickUp que move a task para CLIENTES
+    await setCF('cliente_captado', true);
+
+    // ── 4. Atualiza estado local     // ── 4. Atualiza estado local ────────────────────────────────
     captados.add(c._id);
     localStorage.setItem('captados', JSON.stringify([...captados]));
 
@@ -844,6 +897,7 @@ async function confirmarCaptacao(){
     }
 
     closeCapModal();
+    updateTabCounts();
     renderAll();
     showToast(`✅ ${c.nome} captado e movido para Clientes no ClickUp!`);
 
