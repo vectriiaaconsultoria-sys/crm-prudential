@@ -332,9 +332,9 @@ td.muted{color:var(--text2);}
   <div class="page active" id="page-geral">
     <div class="filter-bar">
       <label>Filtrar:</label>
-      <select class="filter-select" id="g-perfil" onchange="renderGeral()"><option value="">Todos os perfis</option><option>Alta Renda</option><option>Media Renda</option><option>Outros</option></select>
-      <select class="filter-select" id="g-origem" onchange="renderGeral()"><option value="">Todas as origens</option><option value="recomendados">Recomendados</option><option value="followup">Follow-Up</option><option value="clientes">Clientes</option></select>
-      <select class="filter-select" id="g-cidade" onchange="renderGeral()"><option value="">Todas as cidades</option></select>
+      <select class="filter-select" id="g-perfil" onchange="renderGeralRender()"><option value="">Todos os perfis</option><option value="alta">Alta Renda</option><option value="media">Média Renda</option><option value="outros">Outros</option></select>
+      <select class="filter-select" id="g-origem" onchange="renderGeralRender()"><option value="">Todas as origens</option><option value="recomendados">Recomendados</option><option value="followup">Follow-Up</option><option value="clientes">Clientes</option></select>
+      <select class="filter-select" id="g-cidade" onchange="renderGeralRender()"><option value="">Todas as cidades</option></select>
       <input class="search-box" id="g-search" placeholder="🔍 Buscar nome, profissão..." oninput="renderGeral()"/><button class="fbtn" onclick="clearFilters('geral')" style="white-space:nowrap">✕ Limpar filtros</button>
       <div style="display:flex;gap:5px;flex-wrap:wrap;">
         <button class="fbtn active" onclick="setGF('todos',this)">TODOS</button>
@@ -367,7 +367,7 @@ td.muted{color:var(--text2);}
   <div class="page" id="page-recomendados">
     <div class="filter-bar">
       <label>Filtrar:</label>
-      <select class="filter-select" id="r-perfil" onchange="renderRec()"><option value="">Todos os perfis</option><option>Alta Renda</option><option>Media Renda</option><option>Outros</option></select>
+      <select class="filter-select" id="r-perfil" onchange="renderRec()"><option value="">Todos os perfis</option><option value="alta">Alta Renda</option><option value="media">Média Renda</option><option value="outros">Outros</option></select>
       <select class="filter-select" id="r-cidade" onchange="renderRec()"><option value="">Todas as cidades</option></select>
       <select class="filter-select" id="r-prof" onchange="renderRec()"><option value="">Todas as profissões</option></select>
       <input class="search-box" id="r-search" placeholder="🔍 Buscar..." oninput="renderRec()"/><button class="fbtn" onclick="clearFilters('rec')" style="white-space:nowrap">✕ Limpar filtros</button>
@@ -381,7 +381,7 @@ td.muted{color:var(--text2);}
     <div class="filter-bar">
       <label>Filtrar:</label>
       <select class="filter-select" id="f-status" onchange="renderFup()"><option value="">Todos os status</option><option value="novo lead">Novo Lead</option><option value="ativo">Ativo</option><option value="proximo">Próximo 1 Ano</option></select>
-      <select class="filter-select" id="f-perfil" onchange="renderFup()"><option value="">Todos os perfis</option><option>Alta Renda</option><option>Media Renda</option></select>
+      <select class="filter-select" id="f-perfil" onchange="renderFup()"><option value="">Todos os perfis</option><option value="alta">Alta Renda</option><option value="media">Média Renda</option></select>
       <select class="filter-select" id="f-cidade" onchange="renderFup()"><option value="">Todas as cidades</option></select>
       <input class="search-box" id="f-search" placeholder="🔍 Buscar..." oninput="renderFup()"/><button class="fbtn" onclick="clearFilters('fup')" style="white-space:nowrap">✕ Limpar filtros</button>
     </div>
@@ -394,7 +394,7 @@ td.muted{color:var(--text2);}
     <div class="filter-bar">
       <label>Filtrar:</label>
       <select class="filter-select" id="c-status" onchange="renderCli()"><option value="">Todos os status</option><option value="ativo">Ativo</option><option value="proximo">Próximo 1 Ano</option><option value="aniversario">Aniversário</option><option value="novo lead">Novo Lead</option></select>
-      <select class="filter-select" id="c-perfil" onchange="renderCli()"><option value="">Todos os perfis</option><option>Alta Renda</option><option>Media Renda</option><option>Outros</option></select>
+      <select class="filter-select" id="c-perfil" onchange="renderCli()"><option value="">Todos os perfis</option><option value="alta">Alta Renda</option><option value="media">Média Renda</option><option value="outros">Outros</option></select>
       <select class="filter-select" id="c-cidade" onchange="renderCli()"><option value="">Todas as cidades</option></select>
       <select class="filter-select" id="c-prof" onchange="renderCli()"><option value="">Todas as profissões</option></select>
       <input class="search-box" id="c-search" placeholder="🔍 Buscar..." oninput="renderCli()"/><button class="fbtn" onclick="clearFilters('cli')" style="white-space:nowrap">✕ Limpar filtros</button>
@@ -724,7 +724,24 @@ async function loadAll(){
 
 function populateFilters(){const cids=[...new Set(allClients.map(x=>x.cidade).filter(x=>x&&x!=='—'))].sort();const profs=[...new Set(allClients.map(x=>x.prof).filter(x=>x&&x!=='—'))].sort();['g-cidade','r-cidade','f-cidade','c-cidade'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML='<option value="">Todas as cidades</option>'+cids.map(c=>`<option>${c}</option>`).join('');el.value=v;});['r-prof','c-prof'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML='<option value="">Todas as profissões</option>'+profs.map(p=>`<option>${p}</option>`).join('');el.value=v;});}
 
-function filt(tab){let c=allClients;const lkMap={recomendados:'recomendados',rec:'recomendados',followup:'followup',fup:'followup',clientes:'clientes',cli:'clientes'};if(lkMap[tab])c=c.filter(x=>x._lk===lkMap[tab]);const apply=(arr,perfil,cidade,prof,status,search,origem)=>{if(origem)arr=arr.filter(x=>x._lk===origem);if(perfil)arr=arr.filter(x=>String(x.perfil).toLowerCase().includes(perfil.toLowerCase()));if(cidade)arr=arr.filter(x=>x.cidade===cidade);if(prof)arr=arr.filter(x=>x.prof===prof);if(status&&status!=='todos')arr=arr.filter(x=>x.status===status);if(search){const q=search.toLowerCase();arr=arr.filter(x=>x.nome.toLowerCase().includes(q)||x.prof.toLowerCase().includes(q)||x.cidade.toLowerCase().includes(q));}return arr;};if(tab==='geral')return apply(c,gv('g-perfil'),gv('g-cidade'),'',gFilter,gv('g-search'),gv('g-origem'));if(tab==='rec')return apply(c,gv('r-perfil'),gv('r-cidade'),gv('r-prof'),'',gv('r-search'),'');if(tab==='fup')return apply(c,gv('f-perfil'),gv('f-cidade'),'',gv('f-status'),gv('f-search'),'');if(tab==='cli')return apply(c,gv('c-perfil'),gv('c-cidade'),gv('c-prof'),gv('c-status'),gv('c-search'),'');return c;}
+function filt(tab){let c=allClients;const lkMap={recomendados:'recomendados',rec:'recomendados',followup:'followup',fup:'followup',clientes:'clientes',cli:'clientes'};if(lkMap[tab])c=c.filter(x=>x._lk===lkMap[tab]);const apply=(arr,perfil,cidade,prof,status,search,origem)=>{
+  if(origem) arr=arr.filter(x=>x._lk===origem);
+  if(perfil){
+    const pn=norm_str(perfil);
+    arr=arr.filter(x=>{
+      const xp=norm_str(String(x.perfil));
+      if(pn==='alta') return xp.includes('alta');
+      if(pn==='media') return xp.includes('media');
+      if(pn==='outros') return !xp.includes('alta')&&!xp.includes('media');
+      return xp.includes(pn);
+    });
+  }
+  if(cidade) arr=arr.filter(x=>x.cidade===cidade);
+  if(prof) arr=arr.filter(x=>x.prof===prof);
+  if(status&&status!=='todos') arr=arr.filter(x=>x.status===status);
+  if(search){const q=search.toLowerCase();arr=arr.filter(x=>x.nome.toLowerCase().includes(q)||x.prof.toLowerCase().includes(q)||x.cidade.toLowerCase().includes(q));}
+  return arr;
+};if(tab==='geral')return apply(c,gv('g-perfil'),gv('g-cidade'),'',gFilter,gv('g-search'),gv('g-origem'));if(tab==='rec')return apply(c,gv('r-perfil'),gv('r-cidade'),gv('r-prof'),'',gv('r-search'),'');if(tab==='fup')return apply(c,gv('f-perfil'),gv('f-cidade'),'',gv('f-status'),gv('f-search'),'');if(tab==='cli')return apply(c,gv('c-perfil'),gv('c-cidade'),gv('c-prof'),gv('c-status'),gv('c-search'),'');return c;}
 const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
 
 function renderAll(){
@@ -743,13 +760,13 @@ function updateTabCounts(){
 function setGF(f,btn){gFilter=f;document.querySelectorAll('#page-geral .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGeralRender();}
 function renderGeralRender(){const allF=filt('geral');const cli=allClients.filter(x=>x._lk==='clientes');const rec=allClients.filter(x=>x._lk==='recomendados');const rCart=cli.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-geral').innerHTML=kpi('Clientes Consolidados',cli.length,'Carteira ativa','kblue','👤')+kpi('Leads Recomendados',rec.length,'Em abordagem','kpurple','⭐')+kpi('Clientes Ativos',cli.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Renda Carteira',brl(rCart),'Soma renda clientes','korange','💰');renderChartsGeral(cli);renderTableG(allF);}
 
-function renderChartsGeral(cli){const dark=document.documentElement.getAttribute('data-theme')==='dark';const alta=cli.filter(x=>String(x.perfil).toLowerCase().includes('alta')).length;const med=cli.filter(x=>String(x.perfil).toLowerCase().match(/m[eé]dia/)).length;const out=Math.max(0,cli.length-alta-med);document.getElementById('dp-tot').textContent=cli.length;if(chPerfil)chPerfil.destroy();chPerfil=mkDnt('ch-perfil',['Alta Renda','Média Renda','Outros'],[alta,med,out],['#388bfd','#3fb950','#6e7681']);mkLeg('leg-perfil',[{l:'Alta Renda',v:alta,p:pc(alta,cli.length),c:'#388bfd'},{l:'Média Renda',v:med,p:pc(med,cli.length),c:'#3fb950'},{l:'Outros',v:out,p:pc(out,cli.length),c:'#6e7681'}],'perfil');const ativo=cli.filter(x=>x.status==='ativo').length,prox=cli.filter(x=>x.status==='proximo').length,aniv=cli.filter(x=>x.status==='aniversario').length,outst=Math.max(0,cli.length-ativo-prox-aniv);document.getElementById('do-tot').textContent=cli.length;if(chOrigem)chOrigem.destroy();chOrigem=mkDnt('ch-origem',['Ativos','Próx. Renovação','Aniversário','Outros'],[ativo,prox,aniv,outst],['#3fb950','#d29922','#a371f7','#6e7681']);mkLeg('leg-origem',[{l:'Ativos',v:ativo,p:pc(ativo,cli.length),c:'#3fb950'},{l:'Próx. Renovação',v:prox,p:pc(prox,cli.length),c:'#d29922'},{l:'Aniversário',v:aniv,p:pc(aniv,cli.length),c:'#a371f7'},{l:'Outros',v:outst,p:pc(outst,cli.length),c:'#6e7681'}],'status');profList('prof-geral',cli);}
+function renderChartsGeral(cli){const dark=document.documentElement.getAttribute('data-theme')==='dark';const alta=cli.filter(x=>norm_str(String(x.perfil)).includes('alta')).length;const med=cli.filter(x=>norm_str(String(x.perfil)).includes('media')).length;const out=Math.max(0,cli.length-alta-med);document.getElementById('dp-tot').textContent=cli.length;if(chPerfil)chPerfil.destroy();chPerfil=mkDnt('ch-perfil',['Alta Renda','Média Renda','Outros'],[alta,med,out],['#388bfd','#3fb950','#6e7681']);mkLeg('leg-perfil',[{l:'Alta Renda',v:alta,p:pc(alta,cli.length),c:'#388bfd'},{l:'Média Renda',v:med,p:pc(med,cli.length),c:'#3fb950'},{l:'Outros',v:out,p:pc(out,cli.length),c:'#6e7681'}],'perfil');const ativo=cli.filter(x=>x.status==='ativo').length,prox=cli.filter(x=>x.status==='proximo').length,aniv=cli.filter(x=>x.status==='aniversario').length,outst=Math.max(0,cli.length-ativo-prox-aniv);document.getElementById('do-tot').textContent=cli.length;if(chOrigem)chOrigem.destroy();chOrigem=mkDnt('ch-origem',['Ativos','Próx. Renovação','Aniversário','Outros'],[ativo,prox,aniv,outst],['#3fb950','#d29922','#a371f7','#6e7681']);mkLeg('leg-origem',[{l:'Ativos',v:ativo,p:pc(ativo,cli.length),c:'#3fb950'},{l:'Próx. Renovação',v:prox,p:pc(prox,cli.length),c:'#d29922'},{l:'Aniversário',v:aniv,p:pc(aniv,cli.length),c:'#a371f7'},{l:'Outros',v:outst,p:pc(outst,cli.length),c:'#6e7681'}],'status');profList('prof-geral',cli);}
 
 function renderTableG(c){if(!c.length){document.getElementById('tbl-geral').innerHTML=empty();return;}document.getElementById('tbl-geral').innerHTML=`<table><thead><tr><th>Cliente</th><th>Origem</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td>${chOr(x._lk)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table><p class="table-hint">👆 Clique para ver o perfil</p>`;}
 
-function renderRec(){const c=filt('rec');const alta=c.filter(x=>String(x.perfil).toLowerCase().includes('alta')).length;document.getElementById('kpi-rec').innerHTML=kpi('Total de Leads',c.length,'Base de recomendados','kblue','👥')+kpi('Alta Renda',alta,'Leads alta renda','kpurple','💰')+kpi('Não Captados Alta Renda',c.filter(x=>String(x.perfil).toLowerCase().includes('alta')&&!captados.has(x._id)).length,'Prioridade imediata','korange','🎯')+kpi('Renda Média',c.length?brl(Math.round(c.reduce((a,x)=>a+(x.renda||0),0)/c.length)):'—','Média dos leads','kgreen','📊');if(!c.length){document.getElementById('tbl-rec').innerHTML=empty();return;}document.getElementById('tbl-rec').innerHTML=`<table><thead><tr><th>Lead</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Cidade</th><th>Lead Captado</th></tr></thead><tbody>${c.map(x=>`<tr><td onclick="openP('${x._id}')" style="cursor:pointer">${avCell(x)}</td><td class="muted" onclick="openP('${x._id}')">${x.prof}</td><td class="renda" onclick="openP('${x._id}')">${x.renda?brl(x.renda):'—'}</td><td onclick="openP('${x._id}')">${pBadge(x.perfil)}</td><td class="muted" onclick="openP('${x._id}')">${x.cidade}</td><td>${captadoCtrl(x._id)}</td></tr>`).join('')}</tbody></table>`;}
+function renderRec(){const c=filt('rec');const alta=c.filter(x=>norm_str(String(x.perfil)).includes('alta')).length;document.getElementById('kpi-rec').innerHTML=kpi('Total de Leads',c.length,'Base de recomendados','kblue','👥')+kpi('Alta Renda',alta,'Leads alta renda','kpurple','💰')+kpi('Não Captados Alta Renda',c.filter(x=>String(x.perfil).toLowerCase().includes('alta')&&!captados.has(x._id)).length,'Prioridade imediata','korange','🎯')+kpi('Renda Média',c.length?brl(Math.round(c.reduce((a,x)=>a+(x.renda||0),0)/c.length)):'—','Média dos leads','kgreen','📊');if(!c.length){document.getElementById('tbl-rec').innerHTML=empty();return;}document.getElementById('tbl-rec').innerHTML=`<table><thead><tr><th>Lead</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Cidade</th><th>Lead Captado</th></tr></thead><tbody>${c.map(x=>`<tr><td onclick="openP('${x._id}')" style="cursor:pointer">${avCell(x)}</td><td class="muted" onclick="openP('${x._id}')">${x.prof}</td><td class="renda" onclick="openP('${x._id}')">${x.renda?brl(x.renda):'—'}</td><td onclick="openP('${x._id}')">${pBadge(x.perfil)}</td><td class="muted" onclick="openP('${x._id}')">${x.cidade}</td><td>${captadoCtrl(x._id)}</td></tr>`).join('')}</tbody></table>`;}
 
-function renderFup(){const c=filt('fup');document.getElementById('kpi-fup').innerHTML=kpi('Total Follow-Up',c.length,'Em acompanhamento','kblue','🔄')+kpi('Alta Renda',c.filter(x=>String(x.perfil).toLowerCase().includes('alta')).length,'Alta renda','kpurple','💰')+kpi('Novos Leads',c.filter(x=>x.status==='novo lead').length,'Aguardando contato','korange','🌟')+kpi('Próx. Renovação',c.filter(x=>x.status==='proximo').length,'Próximos 1 ano','kgreen','⏰');if(!c.length){document.getElementById('tbl-fup').innerHTML=empty();return;}document.getElementById('tbl-fup').innerHTML=`<table><thead><tr><th>Cliente</th><th>Profissão</th><th>Renda</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table>`;}
+function renderFup(){const c=filt('fup');document.getElementById('kpi-fup').innerHTML=kpi('Total Follow-Up',c.length,'Em acompanhamento','kblue','🔄')+kpi('Alta Renda',c.filter(x=>norm_str(String(x.perfil)).includes('alta')).length,'Alta renda','kpurple','💰')+kpi('Novos Leads',c.filter(x=>x.status==='novo lead').length,'Aguardando contato','korange','🌟')+kpi('Próx. Renovação',c.filter(x=>x.status==='proximo').length,'Próximos 1 ano','kgreen','⏰');if(!c.length){document.getElementById('tbl-fup').innerHTML=empty();return;}document.getElementById('tbl-fup').innerHTML=`<table><thead><tr><th>Cliente</th><th>Profissão</th><th>Renda</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table>`;}
 
 function renderCli(){const c=filt('cli');const rCart=c.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-cli').innerHTML=kpi('Total Clientes',c.length,'Carteira consolidada','kblue','👤')+kpi('Ativos',c.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Próx. Renovação',c.filter(x=>x.status==='proximo').length,'Atenção','korange','⏰')+kpi('Renda Total',brl(rCart),'Soma da carteira','kpurple','💰');if(!c.length){document.getElementById('tbl-cli').innerHTML=empty();return;}document.getElementById('tbl-cli').innerHTML=`<table><thead><tr><th>Cliente</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table><p class="table-hint">👆 Clique para ver o perfil completo</p>`;}
 
@@ -772,17 +789,20 @@ function drillLeg(tipo,label){
   const cli=allClients.filter(x=>x._lk==='clientes');
   let r=[];
   if(tipo==='perfil'){
-    // Filtra pelo perfil exato clicado na legenda
-    if(label==='Alta Renda') r=cli.filter(x=>String(x.perfil).toLowerCase().includes('alta'));
-    else if(label==='Média Renda') r=cli.filter(x=>String(x.perfil).toLowerCase().match(/m[eé]dia/));
-    else r=cli.filter(x=>!String(x.perfil).toLowerCase().includes('alta')&&!String(x.perfil).toLowerCase().match(/m[eé]dia/));
+    const lnorm=norm_str(label);
+    if(lnorm.includes('alta'))
+      r=cli.filter(x=>norm_str(String(x.perfil)).includes('alta'));
+    else if(lnorm.includes('media'))
+      r=cli.filter(x=>norm_str(String(x.perfil)).includes('media'));
+    else
+      r=cli.filter(x=>{const xp=norm_str(String(x.perfil));return !xp.includes('alta')&&!xp.includes('media');});
   } else if(tipo==='status'){
     const m={'Ativos':'ativo','Próx. Renovação':'proximo','Aniversário':'aniversario'};
     const st=m[label];
     if(st) r=cli.filter(x=>x.status===st);
     else r=cli.filter(x=>!['ativo','proximo','aniversario'].includes(x.status));
   }
-  if(!r.length) r=cli; // fallback
+  // Sem fallback — mostra vazio se não encontrar para ser honesto
   openDrill(`${label} — ${r.length} cliente(s)`,r);
 }
 function drillProf(prof){
@@ -871,17 +891,24 @@ async function confirmarCaptacao(){
       } else { console.warn('Campo nao encontrado:', nome, '| disponiveis:', campos.map(f=>f.name).join(', ')); }
     }
 
-    // ── 2. Salva datas do contrato ─────────────────────────────
+    // ── 2. Marca cliente_captado = true PRIMEIRO ──────────────
+    // A Automation #2 do ClickUp move a task para CLIENTES ao detectar essa mudança.
+    // Precisa acontecer ANTES de salvar as datas, para que os campos
+    // sejam gravados já na task dentro da lista CLIENTES.
+    await setCF('cliente_captado', true);
+
+    // ── 3. Aguarda 2s para a automação do ClickUp processar ────
+    btn.innerHTML = '<span class="cap-spinner"></span>Aguardando ClickUp mover a task...';
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // ── 4. Salva datas do contrato (task já está em CLIENTES) ──
+    btn.innerHTML = '<span class="cap-spinner"></span>Salvando datas no ClickUp...';
     await setCF('data_contrato',            dateToTs(dataContrato));
     await setCF('data_inicio_vigencia',     dateToTs(inicioVig));
     await setCF('data_fim_vigencia',        dateToTs(fimVig));
     await setCF('data_aniversario_apolice', dateToTs(inicioVig));
 
-    // ── 3. Marca cliente_captado = true ────────────────────────
-    // Dispara a Automation #2 do ClickUp que move a task para CLIENTES
-    await setCF('cliente_captado', true);
-
-    // ── 4. Atualiza estado local     // ── 4. Atualiza estado local ────────────────────────────────
+    // ── 5. Atualiza estado local ────────────────────────────────
     captados.add(c._id);
     localStorage.setItem('captados', JSON.stringify([...captados]));
 
