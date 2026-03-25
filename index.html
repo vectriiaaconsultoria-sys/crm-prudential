@@ -306,6 +306,7 @@ td.muted{color:var(--text2);}
     <div class="live-badge"><div class="live-dot"></div><span id="upd-time">—</span></div>
     <span id="user-name"></span>
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+    <button class="btn-sm" onclick="openDebugPanel()" title="Debug campos ClickUp">🔧</button>
     <button class="btn-sm primary" id="btn-refresh" onclick="loadAll()" disabled>↻ Atualizar</button>
     <button class="btn-sm" onclick="doLogout()">Sair</button>
   </div>
@@ -521,6 +522,20 @@ td.muted{color:var(--text2);}
   </div>
 </div>
 
+<!-- DEBUG PANEL -->
+<div class="drill-ov" id="debug-ov" style="z-index:1200">
+  <div class="drill-modal" style="max-width:900px;max-height:90vh">
+    <div class="drill-hdr">
+      <div>
+        <div class="drill-title">🔧 Debug — Campos do ClickUp</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Mostra os nomes e valores reais dos campos retornados pela API</div>
+      </div>
+      <button class="drill-close" onclick="document.getElementById('debug-ov').classList.remove('open')">✕</button>
+    </div>
+    <div class="drill-body" id="debug-body" style="font-size:12px;font-family:monospace"></div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
 const API_KEY='pk_278663168_VS8M11SMW8IXJK18PJUNPFJT7NN406CV';
@@ -608,9 +623,65 @@ function toggleTheme(){const t=document.documentElement.getAttribute('data-theme
 
 async function fetchList(key){const{id,label}=LISTS[key];let page=0,tasks=[];while(true){const r=await fetch(`https://api.clickup.com/api/v2/list/${id}/task?include_closed=true&page=${page}&limit=100`,{headers:{Authorization:API_KEY}});if(!r.ok)throw new Error(`${label}: ${r.status}`);const d=await r.json();const b=d.tasks||[];tasks=tasks.concat(b);if(b.length<100)break;page++;}return tasks.map(t=>norm(t,key));}
 
-function gcf(t,name){const f=(t.custom_fields||[]).find(x=>x.name&&x.name.toLowerCase().replace(/[\s_]/g,'')===name.toLowerCase().replace(/[\s_]/g,''));if(!f)return null;if(f.type==='drop_down'&&f.value!=null){const o=f.type_config?.options?.find(x=>x.orderindex===f.value||x.id===f.value);return o?o.name:f.value;}if(f.type==='date'&&f.value)return new Date(Number(f.value)).toLocaleDateString('pt-BR');if((f.type==='number'||f.type==='currency')&&f.value!=null)return f.value;if(typeof f.value==='string'&&f.value)return f.value;if(typeof f.value==='number')return f.value;return null;}
-function allcf(t){return(t.custom_fields||[]).map(f=>{let v=null;if(f.type==='drop_down'&&f.value!=null){const o=f.type_config?.options?.find(x=>x.orderindex===f.value||x.id===f.value);v=o?o.name:f.value;}else if(f.type==='date'&&f.value)v=new Date(Number(f.value)).toLocaleDateString('pt-BR');else if(f.value!=null&&f.value!=='')v=String(f.value);return{name:f.name,val:v};}).filter(x=>x.val&&x.val!=='');}
-function norm(t,lk){const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcf(t,'qtd_dependentes_menor_13')||'—',email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—'};}
+// Normaliza string para comparação: minúsculas, sem acento, sem espaço/underscore
+function norm_str(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s_\-]/g,''); }
+
+function gcf(t, name){
+  const key = norm_str(name);
+  const f = (t.custom_fields||[]).find(x => x.name && norm_str(x.name) === key);
+  if(!f) return null;
+  // Dropdown
+  if(f.type==='drop_down'){
+    if(f.value===null||f.value===undefined) return null;
+    const o = f.type_config?.options?.find(x=>x.orderindex===f.value||x.id===f.value);
+    return o ? o.name : null;
+  }
+  // Label
+  if(f.type==='label'){
+    if(Array.isArray(f.value)&&f.value.length) return f.value.map(v=>v.label||v).join(', ');
+    return null;
+  }
+  // Date
+  if(f.type==='date'){
+    if(!f.value) return null;
+    return new Date(Number(f.value)).toLocaleDateString('pt-BR');
+  }
+  // Number / currency
+  if(f.type==='number'||f.type==='currency'){
+    return (f.value!==null&&f.value!==undefined) ? f.value : null;
+  }
+  // Email / phone (Clickup native types)
+  if(f.type==='email'||f.type==='phone'){
+    return (typeof f.value==='string'&&f.value) ? f.value : null;
+  }
+  // Text / url / short_text
+  if(typeof f.value==='string'&&f.value) return f.value;
+  if(typeof f.value==='number') return f.value;
+  return null;
+}
+
+// Debug: loga todos os custom fields de uma task no console
+function debugTask(taskId){
+  const t = allClients.find(x=>x._id===taskId);
+  if(!t){ console.warn('Task não encontrada:',taskId); return; }
+  console.group('🔍 DEBUG: '+t.nome+' ('+taskId+')');
+  (t._rawFields||[]).forEach(f=>{
+    console.log(`[${f.type}] "${f.name}" → valor:`, f.value, '| type_config:', f.type_config?.options?.slice(0,3));
+  });
+  console.groupEnd();
+}
+function allcf(t){
+  return(t.custom_fields||[]).map(f=>{
+    let v=null;
+    if(f.type==='drop_down'&&f.value!=null){const o=f.type_config?.options?.find(x=>x.orderindex===f.value||x.id===f.value);v=o?o.name:null;}
+    else if(f.type==='label'&&Array.isArray(f.value)&&f.value.length) v=f.value.map(x=>x.label||x).join(', ');
+    else if(f.type==='date'&&f.value) v=new Date(Number(f.value)).toLocaleDateString('pt-BR');
+    else if(f.type==='email'||f.type==='phone'){ if(typeof f.value==='string'&&f.value) v=f.value; }
+    else if(f.value!=null&&f.value!==''&&f.value!==undefined) v=String(f.value);
+    return{name:f.name,val:v};
+  }).filter(x=>x.val&&x.val!==''&&x.val!=='null');
+}
+function norm(t,lk){const _rawFields=t.custom_fields||[];const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcf(t,'qtd_dependentes_menor_13')||'—',email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—',_rawFields};}
 function nStatus(s){if(!s)return'novo lead';const sl=String(s).toLowerCase().trim();if(sl.includes('ativo')||sl==='active')return'ativo';if(sl.includes('próximo')||sl.includes('proximo')||sl.includes('1 ano'))return'proximo';if(sl.includes('aniversário')||sl.includes('aniversario'))return'aniversario';if(sl.includes('novo')||sl.includes('lead'))return'novo lead';return sl;}
 
 async function loadAll(){const btn=document.getElementById('btn-refresh');btn.disabled=true;btn.textContent='⏳';document.getElementById('global-err').style.display='none';try{const[rec,fup,cli]=await Promise.all([fetchList('recomendados'),fetchList('followup'),fetchList('clientes')]);allClients=[...rec,...fup,...cli];document.getElementById('cnt-all').textContent=allClients.length;document.getElementById('cnt-rec').textContent=rec.length;document.getElementById('cnt-fup').textContent=fup.length;document.getElementById('cnt-cli').textContent=cli.length;const now=new Date();document.getElementById('upd-time').textContent='Ao vivo · '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});document.getElementById('tabs-date').textContent=now.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});populateFilters();renderAll();}catch(e){const b=document.getElementById('global-err');b.style.display='block';b.textContent='⚠️ '+e.message;}finally{btn.disabled=false;btn.textContent='↻ Atualizar';}}
@@ -726,13 +797,11 @@ async function confirmarCaptacao(){
   if(!c){ closeCapModal(); return; }
 
   try {
-    // ── 1. Move task para lista Clientes no ClickUp ────────────
-    // ClickUp: para mover entre listas usa POST /task/{id}/move
-    await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'PUT', {
-      list: { id: LISTS.clientes.id }
-    });
+    // ── 1. Busca task atual para pegar IDs dos campos ──────────
+    const taskData = await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}?custom_fields=true`, 'GET');
+    const campos = taskData.custom_fields || [];
 
-    // ── 2. Atualiza campos customizados via campo a campo ───────
+    // ── 2. Atualiza campos de data via endpoint específico ─────
     const camposDatas = [
       { nome: 'data_contrato',            val: dateToTs(dataContrato) },
       { nome: 'data_inicio_vigencia',     val: dateToTs(inicioVig)    },
@@ -740,19 +809,24 @@ async function confirmarCaptacao(){
       { nome: 'data_aniversario_apolice', val: dateToTs(inicioVig)    },
     ];
 
-    // Busca IDs dos campos da task
-    const taskData = await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'GET');
-    const campos = taskData.custom_fields || [];
-
     for(const campo of camposDatas){
-      const cf = campos.find(f=>f.name.toLowerCase().replace(/[\s_]/g,'')===campo.nome.replace(/[\s_]/g,''));
+      const cf = campos.find(f => norm_str(f.name) === norm_str(campo.nome));
       if(cf && campo.val){
-        await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}/field/${cf.id}`, 'POST', { value: campo.val });
+        try {
+          await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}/field/${cf.id}`, 'POST', { value: campo.val });
+        } catch(e){ console.warn('Campo não atualizado:', campo.nome, e.message); }
+      } else {
+        console.warn('Campo não encontrado:', campo.nome, '| campos disponíveis:', campos.map(f=>f.name));
       }
     }
 
-    // ── 3. Atualiza status para "Ativo" ─────────────────────────
-    await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'PUT', { status: 'ativo' });
+    // ── 3. Move task para lista Clientes ───────────────────────
+    // Endpoint correto do ClickUp para mover entre listas
+    try {
+      await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'PUT', {
+        list_id: LISTS.clientes.id
+      });
+    } catch(e){ console.warn('Move task:', e.message); }
 
     // ── 4. Atualiza estado local ────────────────────────────────
     captados.add(c._id);
@@ -829,6 +903,51 @@ function clearFilters(tab){
   else if(tab==='fup'){['f-status','f-perfil','f-cidade','f-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderFup();}
   else if(tab==='cli'){['c-status','c-perfil','c-cidade','c-prof','c-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderCli();}
 }
+function openDebugPanel(){
+  const ov = document.getElementById('debug-ov');
+  const body = document.getElementById('debug-body');
+  if(!allClients.length){ body.innerHTML='<p style="color:var(--text2);padding:20px">Carregue os dados primeiro.</p>'; ov.classList.add('open'); return; }
+
+  // Pega primeira task de cada lista para inspecionar
+  const samples = ['recomendados','followup','clientes'].map(lk=>{
+    return allClients.find(x=>x._lk===lk);
+  }).filter(Boolean);
+
+  let html = '';
+  samples.forEach(c=>{
+    html += `<div style="margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;color:var(--text);margin-bottom:8px">
+        ${c._li} ${c.nome} · <span style="color:var(--text2);font-size:11px">${c._ll} · ID: ${c._id}</span>
+      </div>
+      <div style="color:var(--green);margin-bottom:6px;font-size:11px">✅ Campos lidos pelo CRM: nome=${c.nome} | prof=${c.prof} | perfil=${c.perfil} | renda=${c.renda} | cidade=${c.cidade} | status=${c.status}</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--text2)">Nome do campo (API)</th>
+          <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--text2)">Tipo</th>
+          <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--text2)">Valor bruto</th>
+          <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--text2)">Valor lido pelo CRM</th>
+        </tr></thead>
+        <tbody>
+          ${(c._rawFields||[]).map(f=>{
+            const lido = allClients.find(x=>x._id===c._id)?.[f.name] ?? gcf({custom_fields:c._rawFields},f.name) ?? '—';
+            const vRaw = f.type==='drop_down'?`orderindex:${f.value}`:(f.value??'null');
+            const ok = lido&&lido!=='—';
+            return `<tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:5px 10px;color:var(--text)">${f.name}</td>
+              <td style="padding:5px 10px;color:var(--blue);font-size:10px">${f.type}</td>
+              <td style="padding:5px 10px;color:var(--text3)">${vRaw}</td>
+              <td style="padding:5px 10px;color:${ok?'var(--green)':'var(--red)'}">${lido}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  });
+
+  body.innerHTML = html || '<p style="color:var(--text2);padding:20px">Nenhum dado para exibir.</p>';
+  ov.classList.add('open');
+}
+
 setInterval(()=>{if(currentUser&&allClients.length)loadAll();},180000);
 </script>
 </body>
