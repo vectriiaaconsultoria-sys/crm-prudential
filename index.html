@@ -235,6 +235,9 @@ td.muted{color:var(--text2);}
 .mnav-btn:hover{border-color:var(--blue);color:var(--blue);}
 .month-lbl{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--text);min-width:160px;text-align:center;}
 
+/* CAPTACAO MODAL */
+.cap-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
+
 /* RESPONSIVE */
 @media(max-width:960px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
@@ -485,6 +488,39 @@ td.muted{color:var(--text2);}
   </div>
 </div>
 
+<!-- CAPTAÇÃO MODAL -->
+<div class="drill-ov" id="cap-ov" style="z-index:1100">
+  <div class="drill-modal" style="max-width:480px">
+    <div class="drill-hdr">
+      <div>
+        <div class="drill-title">✅ Registrar Captação</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px" id="cap-modal-nome">—</div>
+      </div>
+      <button class="drill-close" onclick="closeCapModal()">✕</button>
+    </div>
+    <div class="drill-body" style="padding:20px 24px">
+      <div style="margin-bottom:16px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">Data do Primeiro Contrato</div>
+        <input type="date" id="cap-data-contrato" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;" oninput="calcVigencia()"/>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">Início de Vigência</div>
+        <input type="date" id="cap-inicio-vigencia" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;" oninput="calcVigencia()"/>
+      </div>
+      <div style="margin-bottom:20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Data Fim de Vigência (calculada automaticamente)</div>
+        <div id="cap-fim-vigencia-display" style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;color:var(--orange)">Informe o início de vigência</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">1 ano após o início de vigência · data de renegociação</div>
+      </div>
+      <div id="cap-modal-err" style="background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--red);margin-bottom:14px;display:none"></div>
+      <div style="display:flex;gap:10px">
+        <button class="pfb" style="flex:1;padding:10px" onclick="closeCapModal()">Cancelar</button>
+        <button class="pfb primary" style="flex:2;padding:10px" id="cap-confirmar-btn" onclick="confirmarCaptacao()">Confirmar Captação → ClickUp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
 const API_KEY='pk_278663168_VS8M11SMW8IXJK18PJUNPFJT7NN406CV';
@@ -584,7 +620,16 @@ function populateFilters(){const cids=[...new Set(allClients.map(x=>x.cidade).fi
 function filt(tab){let c=allClients;const lkMap={recomendados:'recomendados',rec:'recomendados',followup:'followup',fup:'followup',clientes:'clientes',cli:'clientes'};if(lkMap[tab])c=c.filter(x=>x._lk===lkMap[tab]);const apply=(arr,perfil,cidade,prof,status,search,origem)=>{if(origem)arr=arr.filter(x=>x._lk===origem);if(perfil)arr=arr.filter(x=>String(x.perfil).toLowerCase().includes(perfil.toLowerCase()));if(cidade)arr=arr.filter(x=>x.cidade===cidade);if(prof)arr=arr.filter(x=>x.prof===prof);if(status&&status!=='todos')arr=arr.filter(x=>x.status===status);if(search){const q=search.toLowerCase();arr=arr.filter(x=>x.nome.toLowerCase().includes(q)||x.prof.toLowerCase().includes(q)||x.cidade.toLowerCase().includes(q));}return arr;};if(tab==='geral')return apply(c,gv('g-perfil'),gv('g-cidade'),'',gFilter,gv('g-search'),gv('g-origem'));if(tab==='rec')return apply(c,gv('r-perfil'),gv('r-cidade'),gv('r-prof'),'',gv('r-search'),'');if(tab==='fup')return apply(c,gv('f-perfil'),gv('f-cidade'),'',gv('f-status'),gv('f-search'),'');if(tab==='cli')return apply(c,gv('c-perfil'),gv('c-cidade'),gv('c-prof'),gv('c-status'),gv('c-search'),'');return c;}
 const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
 
-function renderAll(){renderGeral();renderRec();renderFup();renderCli();renderDesemp();}
+function renderAll(){
+  // Restaura clientes captados: move visualmente para lista clientes
+  captados.forEach(id=>{
+    const idx=allClients.findIndex(x=>x._id===id);
+    if(idx>-1&&allClients[idx]._lk==='recomendados'){
+      allClients[idx]._lk='clientes';allClients[idx]._ll='Clientes';allClients[idx]._li='👤';
+    }
+  });
+  renderGeral();renderRec();renderFup();renderCli();renderDesemp();
+}
 
 function setGF(f,btn){gFilter=f;document.querySelectorAll('#page-geral .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGeral();}
 function renderGeral(){const allF=filt('geral');const cli=allClients.filter(x=>x._lk==='clientes');const rec=allClients.filter(x=>x._lk==='recomendados');const rCart=cli.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-geral').innerHTML=kpi('Clientes Consolidados',cli.length,'Carteira ativa','kblue','👤')+kpi('Leads Recomendados',rec.length,'Em abordagem','kpurple','⭐')+kpi('Clientes Ativos',cli.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Renda Carteira',brl(rCart),'Soma renda clientes','korange','💰');renderChartsGeral(cli);renderTableG(allF);}
@@ -616,10 +661,150 @@ function openDrill(title,rows){document.getElementById('drill-title').textConten
 function closeDrill(){document.getElementById('drill-ov').classList.remove('open');}
 document.getElementById('drill-ov').addEventListener('click',function(e){if(e.target===this)closeDrill();});
 
-function captadoCtrl(id){if(captados.has(id))return`<span class="captado-done">✅ Lead Captado</span>`;return`<div class="captado-wrap"><input type="checkbox" class="captado-check" id="cap-${id}" onchange="tgCap('${id}',this)"/><label class="captado-lbl" for="cap-${id}">Marcar como captado</label></div>`;}
-function tgCap(id,cb){if(cb.checked){if(confirm('Confirmar: este lead foi captado como cliente? Ele será movido para a aba Clientes.')){captados.add(id);localStorage.setItem('captados',JSON.stringify([...captados]));// Move lead: muda _lk para clientes visualmente
-const idx=allClients.findIndex(x=>x._id===id);if(idx>-1){allClients[idx]._lk='clientes';allClients[idx]._ll='Clientes';allClients[idx]._li='👤';}renderAll();}else{cb.checked=false;}}else{captados.delete(id);// Retorna para recomendados
-const idx=allClients.findIndex(x=>x._id===id);if(idx>-1){allClients[idx]._lk='recomendados';allClients[idx]._ll='Recomendados';allClients[idx]._li='⭐';}localStorage.setItem('captados',JSON.stringify([...captados]));renderAll();}}
+// ── CAPTAÇÃO ─────────────────────────────────────────────────
+let capModalId = null; // ID do lead sendo captado
+
+function captadoCtrl(id){
+  if(captados.has(id)) return `<span class="captado-done">✅ Lead Captado</span>`;
+  return `<button class="pfb primary" style="padding:5px 12px;font-size:11px" onclick="openCapModal('${id}')">+ Captar Lead</button>`;
+}
+
+function openCapModal(id){
+  const c = allClients.find(x=>x._id===id);
+  if(!c) return;
+  capModalId = id;
+  document.getElementById('cap-modal-nome').textContent = c.nome + ' · ' + c.prof;
+  document.getElementById('cap-data-contrato').value = '';
+  document.getElementById('cap-inicio-vigencia').value = '';
+  document.getElementById('cap-fim-vigencia-display').textContent = 'Informe o início de vigência';
+  document.getElementById('cap-fim-vigencia-display').style.color = 'var(--text3)';
+  document.getElementById('cap-modal-err').style.display = 'none';
+  document.getElementById('cap-ov').classList.add('open');
+}
+
+function closeCapModal(){
+  document.getElementById('cap-ov').classList.remove('open');
+  capModalId = null;
+}
+
+function calcVigencia(){
+  const ini = document.getElementById('cap-inicio-vigencia').value;
+  const disp = document.getElementById('cap-fim-vigencia-display');
+  if(!ini){ disp.textContent='Informe o início de vigência'; disp.style.color='var(--text3)'; return; }
+  const d = new Date(ini+'T12:00:00');
+  d.setFullYear(d.getFullYear()+1);
+  disp.textContent = d.toLocaleDateString('pt-BR');
+  disp.style.color = 'var(--orange)';
+}
+
+// Formata data para timestamp ClickUp (ms)
+function dateToTs(str){ return str ? new Date(str+'T12:00:00').getTime() : null; }
+// Formata data para exibição pt-BR
+function fmtDate(str){ return str ? new Date(str+'T12:00:00').toLocaleDateString('pt-BR') : '—'; }
+
+async function confirmarCaptacao(){
+  const dataContrato = document.getElementById('cap-data-contrato').value;
+  const inicioVig    = document.getElementById('cap-inicio-vigencia').value;
+  const err          = document.getElementById('cap-modal-err');
+  const btn          = document.getElementById('cap-confirmar-btn');
+
+  err.style.display='none';
+  if(!dataContrato || !inicioVig){
+    err.textContent='Preencha a data do contrato e o início de vigência.';
+    err.style.display='block'; return;
+  }
+
+  // Calcula fim de vigência = inicio + 1 ano
+  const fimVigDate = new Date(inicioVig+'T12:00:00');
+  fimVigDate.setFullYear(fimVigDate.getFullYear()+1);
+  const fimVig = fimVigDate.toISOString().split('T')[0];
+
+  btn.disabled=true;
+  btn.innerHTML='<span class="cap-spinner"></span>Salvando no ClickUp...';
+
+  const c = allClients.find(x=>x._id===capModalId);
+  if(!c){ closeCapModal(); return; }
+
+  try {
+    // ── 1. Move task para lista Clientes no ClickUp ────────────
+    // ClickUp: para mover entre listas usa POST /task/{id}/move
+    await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'PUT', {
+      list: { id: LISTS.clientes.id }
+    });
+
+    // ── 2. Atualiza campos customizados via campo a campo ───────
+    const camposDatas = [
+      { nome: 'data_contrato',            val: dateToTs(dataContrato) },
+      { nome: 'data_inicio_vigencia',     val: dateToTs(inicioVig)    },
+      { nome: 'data_fim_vigencia',        val: dateToTs(fimVig)       },
+      { nome: 'data_aniversario_apolice', val: dateToTs(inicioVig)    },
+    ];
+
+    // Busca IDs dos campos da task
+    const taskData = await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'GET');
+    const campos = taskData.custom_fields || [];
+
+    for(const campo of camposDatas){
+      const cf = campos.find(f=>f.name.toLowerCase().replace(/[\s_]/g,'')===campo.nome.replace(/[\s_]/g,''));
+      if(cf && campo.val){
+        await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}/field/${cf.id}`, 'POST', { value: campo.val });
+      }
+    }
+
+    // ── 3. Atualiza status para "Ativo" ─────────────────────────
+    await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}`, 'PUT', { status: 'ativo' });
+
+    // ── 4. Atualiza estado local ────────────────────────────────
+    captados.add(c._id);
+    localStorage.setItem('captados', JSON.stringify([...captados]));
+
+    const idx = allClients.findIndex(x=>x._id===c._id);
+    if(idx>-1){
+      allClients[idx]._lk = 'clientes';
+      allClients[idx]._ll = 'Clientes';
+      allClients[idx]._li = '👤';
+      allClients[idx].status = 'ativo';
+      allClients[idx].primeiraproposta = fmtDate(dataContrato);
+      allClients[idx].iniciovigencia   = fmtDate(inicioVig);
+      allClients[idx].aniversarioapolice = fmtDate(inicioVig);
+    }
+
+    closeCapModal();
+    renderAll();
+    showToast(`✅ ${c.nome} captado e movido para Clientes no ClickUp!`);
+
+  } catch(e){
+    err.textContent = 'Erro ao salvar no ClickUp: ' + e.message;
+    err.style.display='block';
+  } finally {
+    btn.disabled=false;
+    btn.textContent='Confirmar Captação → ClickUp';
+  }
+}
+
+// ── CLICKUP API HELPER ────────────────────────────────────────
+async function cuFetch(url, method='GET', body=null){
+  const opts = {
+    method,
+    headers:{ Authorization: API_KEY, 'Content-Type':'application/json' }
+  };
+  if(body && method!=='GET') opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  // ClickUp retorna 200/204 sem body em alguns casos
+  const text = await r.text();
+  let d = {};
+  try{ d = text ? JSON.parse(text) : {}; }catch(e){ d = {}; }
+  if(!r.ok) throw new Error(d.err || d.message || `HTTP ${r.status}`);
+  return d;
+}
+
+// ── TOAST NOTIFICATION ────────────────────────────────────────
+function showToast(msg){
+  let t = document.getElementById('crm-toast');
+  if(!t){ t=document.createElement('div'); t.id='crm-toast'; t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f6feb;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-family:Montserrat,sans-serif;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:opacity .3s;pointer-events:none'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  setTimeout(()=>{ t.style.opacity='0'; }, 3500);
+}
 
 function mkDnt(id,labels,data,colors){const c=document.getElementById(id).getContext('2d');return new Chart(c,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},options:{cutout:'70%',plugins:{legend:{display:false}},animation:{duration:400}}});}
 function mkLeg(id,items,drill){document.getElementById(id).innerHTML=items.map(i=>`<div class="li" onclick="drillLeg('${drill}','${i.l}')"><div class="ld" style="background:${i.c}"></div><span class="ll">${i.l}</span><span class="lv">${i.v}</span><span class="lp">${i.p}%</span></div>`).join('');}
