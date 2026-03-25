@@ -160,10 +160,7 @@ td.muted{color:var(--text2);}
 .table-hint{font-size:10px;color:var(--text3);margin:6px 12px 0;text-align:right;font-style:italic;}
 
 /* CAPTADO */
-.captado-wrap{display:flex;align-items:center;gap:6px;}
-.captado-check{width:15px;height:15px;accent-color:var(--green);cursor:pointer;}
-.captado-lbl{font-size:11px;color:var(--text2);}
-.captado-done{display:inline-flex;align-items:center;gap:4px;background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.25);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;font-family:'Montserrat',sans-serif;}
+
 
 /* LOADING / ERROR */
 .loading{text-align:center;padding:36px;color:var(--text2);}
@@ -234,9 +231,6 @@ td.muted{color:var(--text2);}
 .mnav-btn{width:28px;height:28px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .mnav-btn:hover{border-color:var(--blue);color:var(--blue);}
 .month-lbl{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--text);min-width:160px;text-align:center;}
-
-/* CAPTACAO MODAL */
-.cap-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
 
 /* RESPONSIVE */
 @media(max-width:960px){
@@ -411,7 +405,7 @@ td.muted{color:var(--text2);}
         <div class="month-lbl" id="d-month-lbl">—</div>
         <button class="mnav-btn" onclick="chMonth(1)">›</button>
       </div>
-      <select class="filter-select" id="d-lista" onchange="renderDesemp()"><option value="">Todas as listas</option><option value="recomendados">Recomendados</option><option value="followup">Follow-Up</option><option value="clientes">Clientes</option></select>
+      <span style="font-size:11px;color:var(--text3)">Dados lidos diretamente do ClickUp · <span id="desemp-hint">Novos clientes = tasks criadas na lista Clientes no mês</span></span>
     </div>
     <div class="kpi-grid" id="kpi-desemp"></div>
     <div class="charts-row" style="grid-template-columns:1fr 1fr;">
@@ -489,52 +483,7 @@ td.muted{color:var(--text2);}
   </div>
 </div>
 
-<!-- CAPTAÇÃO MODAL -->
-<div class="drill-ov" id="cap-ov" style="z-index:1100">
-  <div class="drill-modal" style="max-width:480px">
-    <div class="drill-hdr">
-      <div>
-        <div class="drill-title">✅ Registrar Captação</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px" id="cap-modal-nome">—</div>
-      </div>
-      <button class="drill-close" onclick="closeCapModal()">✕</button>
-    </div>
-    <div class="drill-body" style="padding:20px 24px">
-      <div style="margin-bottom:16px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">Data do Primeiro Contrato</div>
-        <input type="date" id="cap-data-contrato" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;" oninput="calcVigencia()"/>
-      </div>
-      <div style="margin-bottom:16px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">Início de Vigência</div>
-        <input type="date" id="cap-inicio-vigencia" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;" oninput="calcVigencia()"/>
-      </div>
-      <div style="margin-bottom:20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Data Fim de Vigência (calculada automaticamente)</div>
-        <div id="cap-fim-vigencia-display" style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;color:var(--orange)">Informe o início de vigência</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">1 ano após o início de vigência · data de renegociação</div>
-      </div>
-      <div id="cap-modal-err" style="background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--red);margin-bottom:14px;display:none"></div>
-      <div style="display:flex;gap:10px">
-        <button class="pfb" style="flex:1;padding:10px" onclick="closeCapModal()">Cancelar</button>
-        <button class="pfb primary" style="flex:2;padding:10px" id="cap-confirmar-btn" onclick="confirmarCaptacao()">Confirmar Captação → ClickUp</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- DEBUG PANEL -->
-<div class="drill-ov" id="debug-ov" style="z-index:1200">
-  <div class="drill-modal" style="max-width:900px;max-height:90vh">
-    <div class="drill-hdr">
-      <div>
-        <div class="drill-title">🔧 Debug — Campos do ClickUp</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">Mostra os nomes e valores reais dos campos retornados pela API</div>
-      </div>
-      <button class="drill-close" onclick="document.getElementById('debug-ov').classList.remove('open')">✕</button>
-    </div>
-    <div class="drill-body" id="debug-body" style="font-size:12px;font-family:monospace"></div>
-  </div>
-</div>
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
@@ -548,7 +497,7 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVsYm91Z3BkeWxtYmxsa3BocGpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTEwNTAsImV4cCI6MjA4ODkyNzA1MH0.VWJ2dTphr9qtnuPK1ncOLHJiE2a9lxUmlri-rX62s1Q'
 );
 
-let allClients=[],gFilter='todos',captados=new Set(JSON.parse(localStorage.getItem('captados')||'[]')),despMonth=new Date(),chPerfil=null,chOrigem=null,chDProf=null,chDEvo=null,currentUser=null;
+let allClients=[],gFilter='todos',despMonth=new Date(),chPerfil=null,chOrigem=null,chDProf=null,chDEvo=null,currentUser=null;
 
 // ── AUTH ─────────────────────────────────────────────────────
 async function doLogin(){
@@ -692,18 +641,7 @@ async function loadAll(){
     const[rec,fup,cli]=await Promise.all([fetchList('recomendados'),fetchList('followup'),fetchList('clientes')]);
     allClients=[...rec,...fup,...cli];
 
-    // Aplica captados locais: garante que tasks captadas permaneçam em clientes
-    // mesmo antes do ClickUp confirmar a movimentação
-    captados.forEach(id=>{
-      const idx=allClients.findIndex(x=>x._id===id);
-      if(idx>-1 && allClients[idx]._lk==='recomendados'){
-        allClients[idx]._lk='clientes';
-        allClients[idx]._ll='Clientes';
-        allClients[idx]._li='👤';
-      }
-    });
-
-    // Recalcula contagens após aplicar captados
+    // Recalcula contagens
     const recCount = allClients.filter(x=>x._lk==='recomendados').length;
     const fupCount = allClients.filter(x=>x._lk==='followup').length;
     const cliCount = allClients.filter(x=>x._lk==='clientes').length;
@@ -758,21 +696,153 @@ function updateTabCounts(){
 }
 
 function setGF(f,btn){gFilter=f;document.querySelectorAll('#page-geral .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGeralRender();}
-function renderGeralRender(){const allF=filt('geral');const cli=allClients.filter(x=>x._lk==='clientes');const rec=allClients.filter(x=>x._lk==='recomendados');const rCart=cli.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-geral').innerHTML=kpi('Clientes Consolidados',cli.length,'Carteira ativa','kblue','👤')+kpi('Leads Recomendados',rec.length,'Em abordagem','kpurple','⭐')+kpi('Clientes Ativos',cli.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Renda Carteira',brl(rCart),'Soma renda clientes','korange','💰');renderChartsGeral(cli);renderTableG(allF);}
+function renderGeralRender(){
+  // allF = todos com filtros aplicados (para tabela)
+  const allF = filt('geral');
+  // cli = apenas clientes (para KPIs e charts) — aplica filtros de perfil/cidade/busca mas não origem
+  const cliBase = allClients.filter(x=>x._lk==='clientes');
+  const recBase = allClients.filter(x=>x._lk==='recomendados');
+  // Aplica filtros de perfil e cidade nos charts também
+  const pf=gv('g-perfil'), ct=gv('g-cidade'), sr=gv('g-search');
+  const cliFiltered = cliBase.filter(x=>{
+    if(pf){const pn=norm_str(pf);const xp=norm_str(String(x.perfil));if(pn==='alta'&&!xp.includes('alta'))return false;if(pn==='media'&&!xp.includes('media'))return false;if(pn==='outros'&&(xp.includes('alta')||xp.includes('media')))return false;}
+    if(ct&&x.cidade!==ct)return false;
+    if(sr){const q=sr.toLowerCase();if(!x.nome.toLowerCase().includes(q)&&!x.prof.toLowerCase().includes(q)&&!x.cidade.toLowerCase().includes(q))return false;}
+    return true;
+  });
+  const rCart=cliFiltered.reduce((a,x)=>a+(x.renda||0),0);
+  document.getElementById('kpi-geral').innerHTML=
+    kpi('Clientes Consolidados',cliFiltered.length,'Carteira ativa','kblue','👤')+
+    kpi('Leads Recomendados',recBase.length,'Em abordagem','kpurple','⭐')+
+    kpi('Clientes Ativos',cliFiltered.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+
+    kpi('Renda Carteira',brl(rCart),'Soma renda clientes','korange','💰');
+  renderChartsGeral(cliFiltered);
+  renderTableG(allF);
+}
 
-function renderChartsGeral(cli){const dark=document.documentElement.getAttribute('data-theme')==='dark';const alta=cli.filter(x=>norm_str(String(x.perfil)).includes('alta')).length;const med=cli.filter(x=>norm_str(String(x.perfil)).includes('media')).length;const out=Math.max(0,cli.length-alta-med);document.getElementById('dp-tot').textContent=cli.length;if(chPerfil)chPerfil.destroy();chPerfil=mkDnt('ch-perfil',['Alta Renda','Média Renda','Outros'],[alta,med,out],['#388bfd','#3fb950','#6e7681']);mkLeg('leg-perfil',[{l:'Alta Renda',v:alta,p:pc(alta,cli.length),c:'#388bfd'},{l:'Média Renda',v:med,p:pc(med,cli.length),c:'#3fb950'},{l:'Outros',v:out,p:pc(out,cli.length),c:'#6e7681'}],'perfil');const ativo=cli.filter(x=>x.status==='ativo').length,prox=cli.filter(x=>x.status==='proximo').length,aniv=cli.filter(x=>x.status==='aniversario').length,outst=Math.max(0,cli.length-ativo-prox-aniv);document.getElementById('do-tot').textContent=cli.length;if(chOrigem)chOrigem.destroy();chOrigem=mkDnt('ch-origem',['Ativos','Próx. Renovação','Aniversário','Outros'],[ativo,prox,aniv,outst],['#3fb950','#d29922','#a371f7','#6e7681']);mkLeg('leg-origem',[{l:'Ativos',v:ativo,p:pc(ativo,cli.length),c:'#3fb950'},{l:'Próx. Renovação',v:prox,p:pc(prox,cli.length),c:'#d29922'},{l:'Aniversário',v:aniv,p:pc(aniv,cli.length),c:'#a371f7'},{l:'Outros',v:outst,p:pc(outst,cli.length),c:'#6e7681'}],'status');profList('prof-geral',cli);}
+function renderChartsGeral(cli){const dark=document.documentElement.getAttribute('data-theme')==='dark';const alta=cli.filter(x=>norm_str(String(x.perfil)).includes('alta')).length;const med=cli.filter(x=>norm_str(String(x.perfil)).includes('media')).length;const out=Math.max(0,cli.length-alta-med);document.getElementById('dp-tot').textContent=cli.length;if(chPerfil)chPerfil.destroy();chPerfil=mkDnt('ch-perfil',['Alta Renda','Média Renda','Outros'],[alta,med,out],['#388bfd','#3fb950','#6e7681']);mkLeg('leg-perfil',[{k:'alta',l:'Alta Renda',v:alta,p:pc(alta,cli.length),c:'#388bfd'},{k:'media',l:'Média Renda',v:med,p:pc(med,cli.length),c:'#3fb950'},{k:'outros',l:'Outros',v:out,p:pc(out,cli.length),c:'#6e7681'}],'perfil');const ativo=cli.filter(x=>x.status==='ativo').length,prox=cli.filter(x=>x.status==='proximo').length,aniv=cli.filter(x=>x.status==='aniversario').length,outst=Math.max(0,cli.length-ativo-prox-aniv);document.getElementById('do-tot').textContent=cli.length;if(chOrigem)chOrigem.destroy();chOrigem=mkDnt('ch-origem',['Ativos','Próx. Renovação','Aniversário','Outros'],[ativo,prox,aniv,outst],['#3fb950','#d29922','#a371f7','#6e7681']);mkLeg('leg-origem',[{k:'ativo',l:'Ativos',v:ativo,p:pc(ativo,cli.length),c:'#3fb950'},{k:'proximo',l:'Próx. Renovação',v:prox,p:pc(prox,cli.length),c:'#d29922'},{k:'aniversario',l:'Aniversário',v:aniv,p:pc(aniv,cli.length),c:'#a371f7'},{k:'outros',l:'Outros',v:outst,p:pc(outst,cli.length),c:'#6e7681'}],'status');profList('prof-geral',cli);}
 
 function renderTableG(c){if(!c.length){document.getElementById('tbl-geral').innerHTML=empty();return;}document.getElementById('tbl-geral').innerHTML=`<table><thead><tr><th>Cliente</th><th>Origem</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td>${chOr(x._lk)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table><p class="table-hint">👆 Clique para ver o perfil</p>`;}
 
-function renderRec(){const c=filt('rec');const alta=c.filter(x=>norm_str(String(x.perfil)).includes('alta')).length;document.getElementById('kpi-rec').innerHTML=kpi('Total de Leads',c.length,'Base de recomendados','kblue','👥')+kpi('Alta Renda',alta,'Leads alta renda','kpurple','💰')+kpi('Não Captados Alta Renda',c.filter(x=>String(x.perfil).toLowerCase().includes('alta')&&!captados.has(x._id)).length,'Prioridade imediata','korange','🎯')+kpi('Renda Média',c.length?brl(Math.round(c.reduce((a,x)=>a+(x.renda||0),0)/c.length)):'—','Média dos leads','kgreen','📊');if(!c.length){document.getElementById('tbl-rec').innerHTML=empty();return;}document.getElementById('tbl-rec').innerHTML=`<table><thead><tr><th>Lead</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Cidade</th><th>Lead Captado</th></tr></thead><tbody>${c.map(x=>`<tr><td onclick="openP('${x._id}')" style="cursor:pointer">${avCell(x)}</td><td class="muted" onclick="openP('${x._id}')">${x.prof}</td><td class="renda" onclick="openP('${x._id}')">${x.renda?brl(x.renda):'—'}</td><td onclick="openP('${x._id}')">${pBadge(x.perfil)}</td><td class="muted" onclick="openP('${x._id}')">${x.cidade}</td><td>${captadoCtrl(x._id)}</td></tr>`).join('')}</tbody></table>`;}
+function renderRec(){
+  const c=filt('rec');
+  const alta=c.filter(x=>norm_str(String(x.perfil)).includes('alta')).length;
+  const media=c.filter(x=>norm_str(String(x.perfil)).includes('media')).length;
+  const rendaMedia=c.length?Math.round(c.reduce((a,x)=>a+(x.renda||0),0)/c.length):0;
+  document.getElementById('kpi-rec').innerHTML=
+    kpi('Total de Leads',c.length,'Base de recomendados','kblue','👥')+
+    kpi('Alta Renda',alta,'Leads alta renda','kpurple','💰')+
+    kpi('Média Renda',media,'Leads média renda','korange','💼')+
+    kpi('Renda Média',c.length?brl(rendaMedia):'—','Média dos leads','kgreen','📊');
+  if(!c.length){document.getElementById('tbl-rec').innerHTML=empty();return;}
+  document.getElementById('tbl-rec').innerHTML=`<table>
+    <thead><tr><th>Lead</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead>
+    <tbody>${c.map(x=>`<tr onclick="openP('${x._id}')">
+      <td>${avCell(x)}</td><td class="muted">${x.prof}</td>
+      <td class="renda">${x.renda?brl(x.renda):'—'}</td>
+      <td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td>
+      <td class="muted">${x.cidade}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
 
 function renderFup(){const c=filt('fup');document.getElementById('kpi-fup').innerHTML=kpi('Total Follow-Up',c.length,'Em acompanhamento','kblue','🔄')+kpi('Alta Renda',c.filter(x=>norm_str(String(x.perfil)).includes('alta')).length,'Alta renda','kpurple','💰')+kpi('Novos Leads',c.filter(x=>x.status==='novo lead').length,'Aguardando contato','korange','🌟')+kpi('Próx. Renovação',c.filter(x=>x.status==='proximo').length,'Próximos 1 ano','kgreen','⏰');if(!c.length){document.getElementById('tbl-fup').innerHTML=empty();return;}document.getElementById('tbl-fup').innerHTML=`<table><thead><tr><th>Cliente</th><th>Profissão</th><th>Renda</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table>`;}
 
 function renderCli(){const c=filt('cli');const rCart=c.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-cli').innerHTML=kpi('Total Clientes',c.length,'Carteira consolidada','kblue','👤')+kpi('Ativos',c.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Próx. Renovação',c.filter(x=>x.status==='proximo').length,'Atenção','korange','⏰')+kpi('Renda Total',brl(rCart),'Soma da carteira','kpurple','💰');if(!c.length){document.getElementById('tbl-cli').innerHTML=empty();return;}document.getElementById('tbl-cli').innerHTML=`<table><thead><tr><th>Cliente</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table><p class="table-hint">👆 Clique para ver o perfil completo</p>`;}
 
 function chMonth(d){despMonth=new Date(despMonth.getFullYear(),despMonth.getMonth()+d,1);renderDesemp();}
-function renderDesemp(){// Desempenho: apenas leads vindos de Recomendados
-const lista=gv('d-lista');const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];document.getElementById('d-month-lbl').textContent=`${meses[despMonth.getMonth()]} ${despMonth.getFullYear()}`;let base=allClients.filter(x=>x._lk==='recomendados');if(lista&&lista!=='recomendados'){document.getElementById('tbl-desemp').innerHTML='<div class="loading">Desempenho usa apenas leads de Recomendados.</div>';return;}const inM=x=>{if(!x._at)return false;return x._at.getFullYear()===despMonth.getFullYear()&&x._at.getMonth()===despMonth.getMonth();};const mes=base.filter(inM);const cap=mes.filter(x=>captados.has(x._id));const rMes=cap.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-desemp').innerHTML=kpi('Leads no Mês',mes.length,'Entradas no período','kblue','📥')+kpi('Captados',cap.length,'Convertidos','kgreen','✅')+kpi('Tx. Conversão',mes.length?Math.round(cap.length/mes.length*100)+'%':'0%','Leads → clientes','kpurple','📈')+kpi('Renda Captada',brl(rMes),'Soma convertidos','korange','💰');const mProf={};mes.forEach(x=>{const k=x.prof||'—';if(k==='—')return;mProf[k]=(mProf[k]||0)+1;});const pL=Object.keys(mProf).sort((a,b)=>mProf[b]-mProf[a]).slice(0,8);const dark=document.documentElement.getAttribute('data-theme')==='dark';const gc=dark?'#30363d':'#d0d7de';const tc=dark?'#8b949e':'#57606a';if(chDProf)chDProf.destroy();chDProf=new Chart(document.getElementById('ch-d-prof').getContext('2d'),{type:'bar',data:{labels:pL,datasets:[{data:pL.map(k=>mProf[k]),backgroundColor:'#388bfd55',borderColor:'#388bfd',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:10},maxRotation:30}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10},stepSize:1}}}}});const evoL=[],evoLeads=[],evoCap=[];for(let i=5;i>=0;i--){const d=new Date(despMonth.getFullYear(),despMonth.getMonth()-i,1);evoL.push(meses[d.getMonth()].slice(0,3)+'/'+String(d.getFullYear()).slice(2));const m2=base.filter(x=>x._at&&x._at.getFullYear()===d.getFullYear()&&x._at.getMonth()===d.getMonth());evoLeads.push(m2.length);evoCap.push(m2.filter(x=>captados.has(x._id)).length);}if(chDEvo)chDEvo.destroy();chDEvo=new Chart(document.getElementById('ch-d-evo').getContext('2d'),{type:'line',data:{labels:evoL,datasets:[{label:'Leads',data:evoLeads,borderColor:'#388bfd',backgroundColor:'#388bfd15',tension:.3,fill:true,pointRadius:3},{label:'Captados',data:evoCap,borderColor:'#3fb950',backgroundColor:'#3fb95015',tension:.3,fill:true,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc,font:{size:11},boxWidth:10}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10},stepSize:1}}}}});if(!cap.length){document.getElementById('tbl-desemp').innerHTML='<div class="loading">Nenhuma captação no período.</div>';return;}document.getElementById('tbl-desemp').innerHTML=`<table><thead><tr><th>Cliente</th><th>Lista</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Cidade</th></tr></thead><tbody>${cap.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td>${chOr(x._lk)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table>`;}
+
+function renderDesemp(){
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('d-month-lbl').textContent=`${meses[despMonth.getMonth()]} ${despMonth.getFullYear()}`;
+
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const gc=dark?'#30363d':'#d0d7de';
+  const tc=dark?'#8b949e':'#57606a';
+
+  // ── Clientes captados no mês (lista Clientes, criados no mês selecionado) ──
+  // "Captado no mês" = task na lista Clientes com _at (date_created) no mês selecionado
+  const cliDoMes = allClients.filter(x=>{
+    if(x._lk !== 'clientes') return false;
+    if(!x._at) return false;
+    return x._at.getFullYear()===despMonth.getFullYear() && x._at.getMonth()===despMonth.getMonth();
+  });
+
+  // ── Leads recomendados criados no mês ──
+  const leadsDoMes = allClients.filter(x=>{
+    if(x._lk !== 'recomendados') return false;
+    if(!x._at) return false;
+    return x._at.getFullYear()===despMonth.getFullYear() && x._at.getMonth()===despMonth.getMonth();
+  });
+
+  // ── Totais ──
+  const totalCli = allClients.filter(x=>x._lk==='clientes').length;
+  const totalRec = allClients.filter(x=>x._lk==='recomendados').length;
+  const rendaCaptada = cliDoMes.reduce((a,x)=>a+(x.renda||0),0);
+
+  document.getElementById('kpi-desemp').innerHTML=
+    kpi('Novos Clientes',cliDoMes.length,'Captados no mês','kgreen','✅')+
+    kpi('Novos Leads',leadsDoMes.length,'Recomendados no mês','kblue','📥')+
+    kpi('Total Carteira',totalCli,'Clientes consolidados','kpurple','👤')+
+    kpi('Renda Captada',brl(rendaCaptada),'Soma renda novos clientes','korange','💰');
+
+  // ── Gráfico: Novos clientes por profissão no mês ──
+  const mProf={};
+  cliDoMes.forEach(x=>{const k=x.prof||'—';if(k==='—')return;mProf[k]=(mProf[k]||0)+1;});
+  // Se vazio, usa todos os clientes para ter dados no gráfico
+  const profBase = Object.keys(mProf).length ? mProf : (() => {
+    const m={};
+    allClients.filter(x=>x._lk==='clientes').forEach(x=>{const k=x.prof||'—';if(k==='—')return;m[k]=(m[k]||0)+1;});
+    return m;
+  })();
+  const pL=Object.keys(profBase).sort((a,b)=>profBase[b]-profBase[a]).slice(0,8);
+
+  if(chDProf)chDProf.destroy();
+  chDProf=new Chart(document.getElementById('ch-d-prof').getContext('2d'),{
+    type:'bar',
+    data:{labels:pL,datasets:[{data:pL.map(k=>profBase[k]),backgroundColor:'#388bfd55',borderColor:'#388bfd',borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:10},maxRotation:30}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10},stepSize:1}}}}
+  });
+
+  // ── Gráfico: Evolução 6 meses (novos clientes vs novos leads) ──
+  const evoL=[],evoLeads=[],evoCli=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(despMonth.getFullYear(),despMonth.getMonth()-i,1);
+    evoL.push(meses[d.getMonth()].slice(0,3)+'/'+String(d.getFullYear()).slice(2));
+    const inM = x => x._at && x._at.getFullYear()===d.getFullYear() && x._at.getMonth()===d.getMonth();
+    evoLeads.push(allClients.filter(x=>x._lk==='recomendados'&&inM(x)).length);
+    evoCli.push(allClients.filter(x=>x._lk==='clientes'&&inM(x)).length);
+  }
+
+  if(chDEvo)chDEvo.destroy();
+  chDEvo=new Chart(document.getElementById('ch-d-evo').getContext('2d'),{
+    type:'line',
+    data:{labels:evoL,datasets:[
+      {label:'Novos Leads',data:evoLeads,borderColor:'#388bfd',backgroundColor:'#388bfd15',tension:.3,fill:true,pointRadius:3},
+      {label:'Novos Clientes',data:evoCli,borderColor:'#3fb950',backgroundColor:'#3fb95015',tension:.3,fill:true,pointRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:tc,font:{size:11},boxWidth:10}}},
+      scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10},stepSize:1}}}}
+  });
+
+  // ── Tabela: clientes captados no mês ──
+  if(!cliDoMes.length){
+    document.getElementById('tbl-desemp').innerHTML='<div class="loading" style="padding:24px">Nenhum novo cliente captado em '+meses[despMonth.getMonth()]+' '+despMonth.getFullYear()+'.<br><span style="font-size:11px;color:var(--text3)">Os dados refletem a data de criação da task na lista Clientes do ClickUp.</span></div>';
+    return;
+  }
+  document.getElementById('tbl-desemp').innerHTML=`<table>
+    <thead><tr><th>Cliente</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th><th>Data Captação</th></tr></thead>
+    <tbody>${cliDoMes.map(x=>`<tr onclick="openP('${x._id}')">
+      <td>${avCell(x)}</td>
+      <td class="muted">${x.prof}</td>
+      <td class="renda">${x.renda?brl(x.renda):'—'}</td>
+      <td>${pBadge(x.perfil)}</td>
+      <td>${sBadge(x.status)}</td>
+      <td class="muted">${x.cidade}</td>
+      <td class="muted">${x._at?x._at.toLocaleDateString('pt-BR'):'—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
 
 function goTab(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');btn.classList.add('active');}
 
@@ -789,21 +859,24 @@ function drillLeg(tipo,label){
   const cli=allClients.filter(x=>x._lk==='clientes');
   let r=[];
   if(tipo==='perfil'){
-    const lnorm=norm_str(label);
-    if(lnorm.includes('alta'))
+    // Usa chave interna passada pelo mkLeg
+    if(label==='alta')
       r=cli.filter(x=>norm_str(String(x.perfil)).includes('alta'));
-    else if(lnorm.includes('media'))
+    else if(label==='media')
       r=cli.filter(x=>norm_str(String(x.perfil)).includes('media'));
     else
       r=cli.filter(x=>{const xp=norm_str(String(x.perfil));return !xp.includes('alta')&&!xp.includes('media');});
+    // Debug no console
+    console.log('Drill perfil:', label, '| encontrados:', r.length, '| exemplo perfis:', cli.slice(0,3).map(x=>x.perfil));
   } else if(tipo==='status'){
-    const m={'Ativos':'ativo','Próx. Renovação':'proximo','Aniversário':'aniversario'};
+    const m={ativo:'ativo',proximo:'proximo',aniversario:'aniversario'};
     const st=m[label];
     if(st) r=cli.filter(x=>x.status===st);
     else r=cli.filter(x=>!['ativo','proximo','aniversario'].includes(x.status));
+    console.log('Drill status:', label, '→', st, '| encontrados:', r.length);
   }
-  // Sem fallback — mostra vazio se não encontrar para ser honesto
-  openDrill(`${label} — ${r.length} cliente(s)`,r);
+  const titles={alta:'Alta Renda',media:'Média Renda',outros:'Outros',ativo:'Ativos',proximo:'Próx. Renovação',aniversario:'Aniversário Apólice'};
+  openDrill(`${titles[label]||label} — ${r.length} cliente(s)`,r);
 }
 function drillProf(prof){
   const r=allClients.filter(x=>x._lk==='clientes'&&x.prof===prof);
@@ -813,129 +886,6 @@ function openDrill(title,rows){document.getElementById('drill-title').textConten
 function closeDrill(){document.getElementById('drill-ov').classList.remove('open');}
 document.getElementById('drill-ov').addEventListener('click',function(e){if(e.target===this)closeDrill();});
 
-// ── CAPTAÇÃO ─────────────────────────────────────────────────
-let capModalId = null; // ID do lead sendo captado
-
-function captadoCtrl(id){
-  if(captados.has(id)) return `<span class="captado-done">✅ Lead Captado</span>`;
-  return `<button class="pfb primary" style="padding:5px 12px;font-size:11px" onclick="openCapModal('${id}')">+ Captar Lead</button>`;
-}
-
-function openCapModal(id){
-  const c = allClients.find(x=>x._id===id);
-  if(!c) return;
-  capModalId = id;
-  document.getElementById('cap-modal-nome').textContent = c.nome + ' · ' + c.prof;
-  document.getElementById('cap-data-contrato').value = '';
-  document.getElementById('cap-inicio-vigencia').value = '';
-  document.getElementById('cap-fim-vigencia-display').textContent = 'Informe o início de vigência';
-  document.getElementById('cap-fim-vigencia-display').style.color = 'var(--text3)';
-  document.getElementById('cap-modal-err').style.display = 'none';
-  document.getElementById('cap-ov').classList.add('open');
-}
-
-function closeCapModal(){
-  document.getElementById('cap-ov').classList.remove('open');
-  capModalId = null;
-}
-
-function calcVigencia(){
-  const ini = document.getElementById('cap-inicio-vigencia').value;
-  const disp = document.getElementById('cap-fim-vigencia-display');
-  if(!ini){ disp.textContent='Informe o início de vigência'; disp.style.color='var(--text3)'; return; }
-  const d = new Date(ini+'T12:00:00');
-  d.setFullYear(d.getFullYear()+1);
-  disp.textContent = d.toLocaleDateString('pt-BR');
-  disp.style.color = 'var(--orange)';
-}
-
-// Formata data para timestamp ClickUp (ms)
-function dateToTs(str){ return str ? new Date(str+'T12:00:00').getTime() : null; }
-// Formata data para exibição pt-BR
-function fmtDate(str){ return str ? new Date(str+'T12:00:00').toLocaleDateString('pt-BR') : '—'; }
-
-async function confirmarCaptacao(){
-  const dataContrato = document.getElementById('cap-data-contrato').value;
-  const inicioVig    = document.getElementById('cap-inicio-vigencia').value;
-  const err          = document.getElementById('cap-modal-err');
-  const btn          = document.getElementById('cap-confirmar-btn');
-
-  err.style.display='none';
-  if(!dataContrato || !inicioVig){
-    err.textContent='Preencha a data do contrato e o início de vigência.';
-    err.style.display='block'; return;
-  }
-
-  // Calcula fim de vigência = inicio + 1 ano
-  const fimVigDate = new Date(inicioVig+'T12:00:00');
-  fimVigDate.setFullYear(fimVigDate.getFullYear()+1);
-  const fimVig = fimVigDate.toISOString().split('T')[0];
-
-  btn.disabled=true;
-  btn.innerHTML='<span class="cap-spinner"></span>Salvando no ClickUp...';
-
-  const c = allClients.find(x=>x._id===capModalId);
-  if(!c){ closeCapModal(); return; }
-
-  try {
-    // ── 1. Busca task para obter IDs reais dos campos ──────────
-    const taskData = await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}?custom_fields=true`, 'GET');
-    const campos = taskData.custom_fields || [];
-
-    // Helper: atualiza campo pelo nome normalizado
-    async function setCF(nome, valor){
-      const cf = campos.find(f => norm_str(f.name) === norm_str(nome));
-      if(cf && valor !== null && valor !== undefined){
-        try{ await cuFetch(`https://api.clickup.com/api/v2/task/${c._id}/field/${cf.id}`, 'POST', { value: valor }); }
-        catch(e){ console.warn('setCF falhou:', nome, e.message); }
-      } else { console.warn('Campo nao encontrado:', nome, '| disponiveis:', campos.map(f=>f.name).join(', ')); }
-    }
-
-    // ── 2. Marca cliente_captado = true PRIMEIRO ──────────────
-    // A Automation #2 do ClickUp move a task para CLIENTES ao detectar essa mudança.
-    // Precisa acontecer ANTES de salvar as datas, para que os campos
-    // sejam gravados já na task dentro da lista CLIENTES.
-    await setCF('cliente_captado', true);
-
-    // ── 3. Aguarda 2s para a automação do ClickUp processar ────
-    btn.innerHTML = '<span class="cap-spinner"></span>Aguardando ClickUp mover a task...';
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // ── 4. Salva datas do contrato (task já está em CLIENTES) ──
-    btn.innerHTML = '<span class="cap-spinner"></span>Salvando datas no ClickUp...';
-    await setCF('data_contrato',            dateToTs(dataContrato));
-    await setCF('data_inicio_vigencia',     dateToTs(inicioVig));
-    await setCF('data_fim_vigencia',        dateToTs(fimVig));
-    await setCF('data_aniversario_apolice', dateToTs(inicioVig));
-
-    // ── 5. Atualiza estado local ────────────────────────────────
-    captados.add(c._id);
-    localStorage.setItem('captados', JSON.stringify([...captados]));
-
-    const idx = allClients.findIndex(x=>x._id===c._id);
-    if(idx>-1){
-      allClients[idx]._lk = 'clientes';
-      allClients[idx]._ll = 'Clientes';
-      allClients[idx]._li = '👤';
-      allClients[idx].status = 'ativo';
-      allClients[idx].primeiraproposta = fmtDate(dataContrato);
-      allClients[idx].iniciovigencia   = fmtDate(inicioVig);
-      allClients[idx].aniversarioapolice = fmtDate(inicioVig);
-    }
-
-    closeCapModal();
-    updateTabCounts();
-    renderAll();
-    showToast(`✅ ${c.nome} captado e movido para Clientes no ClickUp!`);
-
-  } catch(e){
-    err.textContent = 'Erro ao salvar no ClickUp: ' + e.message;
-    err.style.display='block';
-  } finally {
-    btn.disabled=false;
-    btn.textContent='Confirmar Captação → ClickUp';
-  }
-}
 
 // ── CLICKUP API HELPER ────────────────────────────────────────
 async function cuFetch(url, method='GET', body=null){
@@ -962,7 +912,7 @@ function showToast(msg){
 }
 
 function mkDnt(id,labels,data,colors){const c=document.getElementById(id).getContext('2d');return new Chart(c,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},options:{cutout:'70%',plugins:{legend:{display:false}},animation:{duration:400}}});}
-function mkLeg(id,items,drill){document.getElementById(id).innerHTML=items.map(i=>`<div class="li" onclick="drillLeg('${drill}','${i.l}')"><div class="ld" style="background:${i.c}"></div><span class="ll">${i.l}</span><span class="lv">${i.v}</span><span class="lp">${i.p}%</span></div>`).join('');}
+function mkLeg(id,items,drill){document.getElementById(id).innerHTML=items.map(i=>`<div class="li" onclick="drillLeg('${drill}','${i.k||i.l}')"><div class="ld" style="background:${i.c}"></div><span class="ll">${i.l}</span><span class="lv">${i.v}</span><span class="lp">${i.p}%</span></div>`).join('');}
 function profList(id,c){const m={};c.forEach(x=>{const k=x.prof||'—';if(k==='—')return;if(!m[k])m[k]={t:0,n:0};m[k].t+=x.renda;m[k].n++;});const p=Object.entries(m).map(([k,d])=>({k,avg:Math.round(d.t/d.n),n:d.n})).sort((a,b)=>b.avg-a.avg).slice(0,7);if(!p.length){document.getElementById(id).innerHTML='<p style="color:var(--text3);font-size:12px">Sem dados.</p>';return;}const mx=p[0].avg||1;document.getElementById(id).innerHTML=p.map(x=>`<div class="prof-item" onclick="drillProf('${x.k}')"><div class="pt"><span class="pn">${x.k} <span style="color:var(--text3);font-size:10px">(${x.n})</span></span><span class="pa">${brl(x.avg)}</span></div><div class="pb-bg"><div class="pb-fill" style="width:${Math.round(x.avg/mx*100)}%"></div></div></div>`).join('');}
 
 const brl=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
