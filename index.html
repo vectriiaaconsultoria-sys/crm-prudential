@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root,[data-theme="dark"]{
   --bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--border:#30363d;--border2:#444c56;
@@ -233,29 +232,6 @@ td.muted{color:var(--text2);}
 .mnav-btn:hover{border-color:var(--blue);color:var(--blue);}
 .month-lbl{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--text);min-width:160px;text-align:center;}
 
-/* NOTIFICAÇÕES */
-.notif-btn{position:relative;width:32px;height:32px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
-.notif-btn:hover{border-color:var(--orange);color:var(--orange);}
-.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;font-family:'Montserrat',sans-serif;min-width:16px;text-align:center;display:none;}
-.notif-badge.show{display:block;}
-.notif-panel{position:fixed;top:58px;right:16px;width:340px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:500;display:none;max-height:420px;overflow-y:auto;}
-.notif-panel.open{display:block;}
-.notif-hdr{padding:12px 16px;border-bottom:1px solid var(--border);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:space-between;}
-.notif-item{padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
-.notif-item:last-child{border-bottom:none;}
-.notif-item:hover{background:var(--bg3);}
-.notif-item-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
-.notif-item-sub{font-size:11px;color:var(--text2);}
-.notif-empty{padding:20px 16px;text-align:center;color:var(--text3);font-size:12px;}
-
-/* POP-UP RENEG */
-.reneg-popup{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--orange);border-radius:10px;padding:14px 18px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:800;display:none;animation:slideUp .3s ease;}
-.reneg-popup.show{display:block;}
-@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.reneg-popup-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.reneg-popup-title{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;color:var(--orange);}
-.reneg-popup-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;}
-
 /* RESPONSIVE */
 @media(max-width:960px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
@@ -296,15 +272,11 @@ td.muted{color:var(--text2);}
     </div>
     <div class="auth-field">
       <label>E-mail</label>
-      <input type="email" id="auth-email" placeholder="seu@email.com" autocomplete="username email"/>
+      <input type="email" id="auth-email" placeholder="seu@email.com" autocomplete="email"/>
     </div>
     <div class="auth-field">
       <label>Senha</label>
       <input type="password" id="auth-pass" placeholder="••••••••" autocomplete="current-password"/>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <input type="checkbox" id="auth-remember" style="accent-color:var(--blue);width:14px;height:14px" checked/>
-      <label for="auth-remember" style="font-size:12px;color:var(--text2);cursor:pointer">Manter conectado</label>
     </div>
     <button class="auth-btn" id="auth-btn" onclick="doLogin()">Entrar no Sistema</button>
     <div class="auth-error" id="auth-err"></div>
@@ -327,11 +299,7 @@ td.muted{color:var(--text2);}
   <div class="hdr-right">
     <div class="live-badge"><div class="live-dot"></div><span id="upd-time">—</span></div>
     <span id="user-name"></span>
-    <button class="notif-btn" id="notif-btn" onclick="toggleNotif()" title="Notificações">
-      🔔<span class="notif-badge" id="notif-badge">0</span>
-    </button>
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
-    <button class="btn-sm" onclick="exportExcel()" title="Exportar relatório Excel" style="display:none" id="btn-export">📊 Relatório</button>
     <button class="btn-sm" onclick="openDebugPanel()" title="Debug campos ClickUp">🔧</button>
     <button class="btn-sm primary" id="btn-refresh" onclick="loadAll()" disabled>↻ Atualizar</button>
     <button class="btn-sm" onclick="doLogout()">Sair</button>
@@ -396,7 +364,6 @@ td.muted{color:var(--text2);}
       <select class="filter-select" id="r-perfil" onchange="renderRec()"><option value="">Todos os perfis</option><option value="alta">Alta Renda</option><option value="media">Média Renda</option><option value="outros">Outros</option></select>
       <select class="filter-select" id="r-cidade" onchange="renderRec()"><option value="">Todas as cidades</option></select>
       <select class="filter-select" id="r-prof" onchange="renderRec()"><option value="">Todas as profissões</option></select>
-      <select class="filter-select" id="r-dep" onchange="renderRec()"><option value="">Todos os dependentes</option><option value="1">1+ filho</option><option value="2">2+ filhos</option><option value="3">3+ filhos</option></select>
       <input class="search-box" id="r-search" placeholder="🔍 Buscar..." oninput="renderRec()"/><button class="fbtn" onclick="clearFilters('rec')" style="white-space:nowrap">✕ Limpar filtros</button>
     </div>
     <div class="kpi-grid" id="kpi-rec"></div>
@@ -424,7 +391,6 @@ td.muted{color:var(--text2);}
       <select class="filter-select" id="c-perfil" onchange="renderCli()"><option value="">Todos os perfis</option><option value="alta">Alta Renda</option><option value="media">Média Renda</option><option value="outros">Outros</option></select>
       <select class="filter-select" id="c-cidade" onchange="renderCli()"><option value="">Todas as cidades</option></select>
       <select class="filter-select" id="c-prof" onchange="renderCli()"><option value="">Todas as profissões</option></select>
-      <select class="filter-select" id="c-dep" onchange="renderCli()"><option value="">Todos os dependentes</option><option value="1">1+ filho</option><option value="2">2+ filhos</option><option value="3">3+ filhos</option></select>
       <input class="search-box" id="c-search" placeholder="🔍 Buscar..." oninput="renderCli()"/><button class="fbtn" onclick="clearFilters('cli')" style="white-space:nowrap">✕ Limpar filtros</button>
     </div>
     <div class="kpi-grid" id="kpi-cli"></div>
@@ -473,7 +439,7 @@ td.muted{color:var(--text2);}
           <div class="fi"><div class="fl">Nascimento</div><div class="fv" id="d-nasc">—</div></div>
           <div class="fi"><div class="fl">Estado Civil</div><div class="fv" id="d-ecivil">—</div></div>
           <div class="fi"><div class="fl">Profissão</div><div class="fv" id="d-prof">—</div></div>
-          <div class="fi"><div class="fl"></div><div class="fv" id="d-dep">—</div></div>
+          <div class="fi"><div class="fl">Dependentes &lt;13</div><div class="fv" id="d-dep">—</div></div>
           <div class="fi"><div class="fl">Cidade</div><div class="fv" id="d-cidade">—</div></div>
           <div class="fi"><div class="fl">Perfil de Renda</div><div class="fv" id="d-perfil">—</div></div>
         </div>
@@ -491,8 +457,8 @@ td.muted{color:var(--text2);}
     <div class="tc" id="tc-apolice">
       <div class="ps"><div class="ps-title">Apólice & Datas</div>
         <div class="fg">
-          <div class="fi full"><div class="fl">Início de Vigência</div><div class="fv" id="d-contrato">—</div></div>
-          <div class="fi full"><div class="fl">Renegociação do Contrato</div><div class="fv" id="d-reneg">—</div></div>
+          <div class="fi full"><div class="fl">Data 1ª Proposta</div><div class="fv" id="d-ass">—</div></div>
+          <div class="fi full"><div class="fl">Renegociação do Contrato</div><div class="fv" id="d-contrato">—</div></div>
           <div class="fi full"><div class="fl">Status</div><div class="fv" id="d-status">—</div></div>
           <div class="fi full"><div class="fl">Lista</div><div class="fv" id="d-lista">—</div></div>
         </div>
@@ -505,25 +471,6 @@ td.muted{color:var(--text2);}
     <button class="pfb" onclick="closePanel()">← Voltar</button>
     <button class="pfb primary" id="btn-cu">🔗 Abrir no ClickUp</button>
   </div>
-</div>
-
-<!-- NOTIF PANEL -->
-<div class="notif-panel" id="notif-panel">
-  <div class="notif-hdr">
-    <span>🔔 Notificações</span>
-    <button style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px" onclick="clearNotifs()">Limpar</button>
-  </div>
-  <div id="notif-list"><div class="notif-empty">Sem notificações</div></div>
-</div>
-
-<!-- RENEG POPUP -->
-<div class="reneg-popup" id="reneg-popup">
-  <div class="reneg-popup-hdr">
-    <span class="reneg-popup-title">⚠️ Renegociações este mês</span>
-    <button class="reneg-popup-close" onclick="document.getElementById('reneg-popup').classList.remove('show')">✕</button>
-  </div>
-  <div id="reneg-popup-body" style="font-size:12px;color:var(--text2)"></div>
-  <button class="pfb primary" style="width:100%;margin-top:10px;padding:7px" onclick="goTab('clientes',document.querySelectorAll('.tab')[3]);document.getElementById('reneg-popup').classList.remove('show')">Ver na aba Clientes →</button>
 </div>
 
 <!-- DRILL MODAL -->
@@ -569,12 +516,7 @@ async function doLogin(){
     const name = profile?.nome || data.user.email.split('@')[0];
     currentUser = { id: data.user.id, email: data.user.email, name, role: profile?.role || 'corretor' };
 
-    // 3. Salva preferência de "manter conectado"
-    const manter = document.getElementById('auth-remember')?.checked !== false;
-    localStorage.setItem('crm_manter', manter ? 'true' : 'false');
-    if(!manter) await sb.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
-
-    // 4. Registra último acesso (ignora erro se função não existir ainda)
+    // 3. Registra último acesso (ignora erro se função não existir ainda)
     try { await sb.rpc('registrar_acesso', { user_id: data.user.id }); } catch(e){}
 
     showApp();
@@ -589,7 +531,6 @@ async function doLogin(){
 }
 
 async function doLogout(){
-  localStorage.setItem('crm_manter', 'false');
   await sb.auth.signOut();
   currentUser=null;
   document.getElementById('app-hdr').style.display='none';
@@ -606,20 +547,13 @@ function showApp(){
   document.getElementById('app-tabs').style.display='flex';
   document.getElementById('app-main').style.display='block';
   document.getElementById('user-name').textContent='👤 '+currentUser.name;
-  document.getElementById('btn-export').style.display='';
   loadAll();
 }
 
 document.getElementById('auth-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
-// Verifica sessão salva — só restaura se usuário marcou "Manter conectado"
+// Verifica sessão ativa ao carregar a página
 (async()=>{
-  const manter = localStorage.getItem('crm_manter') === 'true';
-  if(!manter){
-    // Sem permissão para restaurar — faz logout silencioso e mostra login
-    await sb.auth.signOut();
-    return;
-  }
   const { data: { session } } = await sb.auth.getSession();
   if(session){
     const { data: profile } = await sb.from('crm_users').select('nome, email, role').eq('id', session.user.id).single();
@@ -694,18 +628,7 @@ function allcf(t){
     return{name:f.name,val:v};
   }).filter(x=>x.val&&x.val!==''&&x.val!=='null');
 }
-function norm(t,lk){const _rawFields=t.custom_fields||[];const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcf(t,'qtd_dependentes_menor_13')||'—',email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',fimvigencia:gcf(t,'data_fim_vigencia')||gcf(t,'datafimvigencia')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',dep_num:(()=>{
-  const fields = t.custom_fields||[];
-  // Primeiro tenta pelo ID exato
-  let f = fields.find(x=>x.id==='c27ca4cd-0f79-4812-9f0b-f83ce46621e2');
-  // Fallback: tenta por nome normalizado
-  if(!f) f = fields.find(x=>x.name&&norm_str(x.name).includes('filhos'));
-  if(!f) f = fields.find(x=>x.name&&norm_str(x.name).includes('dependente'));
-  if(!f||f.value===null||f.value===undefined) return 0;
-  // Pode vir como number, string ou objeto
-  const v = typeof f.value === 'object' ? JSON.stringify(f.value) : f.value;
-  return parseFloat(String(v).replace(/[^\d.]/g,''))||0;
-})(),cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—',_rawFields};}
+function norm(t,lk){const _rawFields=t.custom_fields||[];const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcf(t,'qtd_dependentes_menor_13')||'—',email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—',_rawFields};}
 function nStatus(s){if(!s)return'novo lead';const sl=String(s).toLowerCase().trim();if(sl.includes('ativo')||sl==='active')return'ativo';if(sl.includes('próximo')||sl.includes('proximo')||sl.includes('1 ano'))return'proximo';if(sl.includes('aniversário')||sl.includes('aniversario'))return'aniversario';if(sl.includes('novo')||sl.includes('lead'))return'novo lead';return sl;}
 
 async function loadAll(){
@@ -737,7 +660,7 @@ async function loadAll(){
 
 function populateFilters(){const cids=[...new Set(allClients.map(x=>x.cidade).filter(x=>x&&x!=='—'))].sort();const profs=[...new Set(allClients.map(x=>x.prof).filter(x=>x&&x!=='—'))].sort();['g-cidade','r-cidade','f-cidade','c-cidade'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML='<option value="">Todas as cidades</option>'+cids.map(c=>`<option>${c}</option>`).join('');el.value=v;});['r-prof','c-prof'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const v=el.value;el.innerHTML='<option value="">Todas as profissões</option>'+profs.map(p=>`<option>${p}</option>`).join('');el.value=v;});}
 
-function filt(tab){let c=allClients;const lkMap={recomendados:'recomendados',rec:'recomendados',followup:'followup',fup:'followup',clientes:'clientes',cli:'clientes'};if(lkMap[tab])c=c.filter(x=>x._lk===lkMap[tab]);const apply=(arr,perfil,cidade,prof,status,search,origem,dep)=>{
+function filt(tab){let c=allClients;const lkMap={recomendados:'recomendados',rec:'recomendados',followup:'followup',fup:'followup',clientes:'clientes',cli:'clientes'};if(lkMap[tab])c=c.filter(x=>x._lk===lkMap[tab]);const apply=(arr,perfil,cidade,prof,status,search,origem)=>{
   if(origem) arr=arr.filter(x=>x._lk===origem);
   if(perfil){
     const pn=norm_str(perfil);
@@ -752,15 +675,13 @@ function filt(tab){let c=allClients;const lkMap={recomendados:'recomendados',rec
   if(cidade) arr=arr.filter(x=>x.cidade===cidade);
   if(prof) arr=arr.filter(x=>x.prof===prof);
   if(status&&status!=='todos') arr=arr.filter(x=>x.status===status);
-  if(dep&&dep!=='') arr=arr.filter(x=>x.dep_num>=parseInt(dep));
   if(search){const q=search.toLowerCase();arr=arr.filter(x=>x.nome.toLowerCase().includes(q)||x.prof.toLowerCase().includes(q)||x.cidade.toLowerCase().includes(q));}
   return arr;
-};if(tab==='geral')return apply(c,gv('g-perfil'),gv('g-cidade'),'',gFilter,gv('g-search'),gv('g-origem'));if(tab==='rec')return apply(c,gv('r-perfil'),gv('r-cidade'),gv('r-prof'),'',gv('r-search'),'',gv('r-dep'));if(tab==='fup')return apply(c,gv('f-perfil'),gv('f-cidade'),'',gv('f-status'),gv('f-search'),'');if(tab==='cli')return apply(c,gv('c-perfil'),gv('c-cidade'),gv('c-prof'),gv('c-status'),gv('c-search'),'',gv('c-dep'));return c;}
+};if(tab==='geral')return apply(c,gv('g-perfil'),gv('g-cidade'),'',gFilter,gv('g-search'),gv('g-origem'));if(tab==='rec')return apply(c,gv('r-perfil'),gv('r-cidade'),gv('r-prof'),'',gv('r-search'),'');if(tab==='fup')return apply(c,gv('f-perfil'),gv('f-cidade'),'',gv('f-status'),gv('f-search'),'');if(tab==='cli')return apply(c,gv('c-perfil'),gv('c-cidade'),gv('c-prof'),gv('c-status'),gv('c-search'),'');return c;}
 const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
 
 function renderAll(){
   renderGeralRender();renderRec();renderFup();renderCli();renderDesemp();
-  buildNotifs();
 }
 function updateTabCounts(){
   const recC=allClients.filter(x=>x._lk==='recomendados').length;
@@ -792,7 +713,7 @@ function renderGeralRender(){
     kpi('Clientes Consolidados',cliFiltered.length,'Carteira ativa','kblue','👤')+
     kpi('Leads Recomendados',recBase.length,'Em abordagem','kpurple','⭐')+
     kpi('Clientes Ativos',cliFiltered.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+
-    kpi('Renda Média Carteira',brl(cliFiltered.length?Math.round(rCart/cliFiltered.length):0),'Média de renda dos clientes','korange','💰');
+    kpi('Renda Carteira',brl(rCart),'Soma renda clientes','korange','💰');
   renderChartsGeral(cliFiltered);
   renderTableG(allF);
 }
@@ -824,56 +745,7 @@ function renderRec(){
 
 function renderFup(){const c=filt('fup');document.getElementById('kpi-fup').innerHTML=kpi('Total Follow-Up',c.length,'Em acompanhamento','kblue','🔄')+kpi('Alta Renda',c.filter(x=>norm_str(String(x.perfil)).includes('alta')).length,'Alta renda','kpurple','💰')+kpi('Novos Leads',c.filter(x=>x.status==='novo lead').length,'Aguardando contato','korange','🌟')+kpi('Próx. Renovação',c.filter(x=>x.status==='proximo').length,'Próximos 1 ano','kgreen','⏰');if(!c.length){document.getElementById('tbl-fup').innerHTML=empty();return;}document.getElementById('tbl-fup').innerHTML=`<table><thead><tr><th>Cliente</th><th>Profissão</th><th>Renda</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table>`;}
 
-function renderCli(){
-  const c=filt('cli');
-  const rendaMedia=c.length?Math.round(c.reduce((a,x)=>a+(x.renda||0),0)/c.length):0;
-  // Clientes com fim de vigência no mês atual
-  const hoje=new Date(); const mesAtual=hoje.getMonth(); const anoAtual=hoje.getFullYear();
-  const reneg=c.filter(x=>{
-    if(!x.fimvigencia||x.fimvigencia==='—') return false;
-    const pts=x.fimvigencia.split('/'); if(pts.length<3) return false;
-    const d=new Date(pts[2],pts[1]-1,pts[0]);
-    return d.getMonth()===mesAtual&&d.getFullYear()===anoAtual;
-  });
-  document.getElementById('kpi-cli').innerHTML=
-    kpi('Total Clientes',c.length,'Carteira consolidada','kblue','👤')+
-    kpi('Ativos',c.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+
-    `<div class="kpi korange" onclick="openRenegModal()" style="cursor:pointer">
-      <div class="kpi-icon">📋</div>
-      <div class="kpi-lbl">Próx. Renegociação</div>
-      <div class="kpi-val">${reneg.length}</div>
-      <div class="kpi-sub">Clique para ver · este mês</div>
-    </div>`+
-    kpi('Renda Média',brl(rendaMedia),'Média da carteira','kpurple','💰');
-  if(!c.length){document.getElementById('tbl-cli').innerHTML=empty();return;}
-  document.getElementById('tbl-cli').innerHTML=`<table>
-    <thead><tr><th>Cliente</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Fim Vigência</th><th>Cidade</th></tr></thead>
-    <tbody>${c.map(x=>`<tr onclick="openP('${x._id}')">
-      <td>${avCell(x)}</td><td class="muted">${x.prof}</td>
-      <td class="renda">${x.renda?brl(x.renda):'—'}</td>
-      <td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td>
-      <td class="muted" style="${isRenegMes(x)?'color:var(--orange);font-weight:600':''}">${x.fimvigencia||'—'}</td>
-      <td class="muted">${x.cidade}</td>
-    </tr>`).join('')}</tbody></table>
-    <p class="table-hint">👆 Clique para ver o perfil completo</p>`;
-}
-function isRenegMes(x){
-  if(!x.fimvigencia||x.fimvigencia==='—') return false;
-  const pts=x.fimvigencia.split('/'); if(pts.length<3) return false;
-  const d=new Date(pts[2],pts[1]-1,pts[0]); const h=new Date();
-  return d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();
-}
-function openRenegModal(){
-  const c=allClients.filter(x=>x._lk==='clientes');
-  const hoje=new Date();
-  const reneg=c.filter(x=>{
-    if(!x.fimvigencia||x.fimvigencia==='—') return false;
-    const pts=x.fimvigencia.split('/'); if(pts.length<3) return false;
-    const d=new Date(pts[2],pts[1]-1,pts[0]);
-    return d.getMonth()===hoje.getMonth()&&d.getFullYear()===hoje.getFullYear();
-  });
-  openDrill(`⚠️ Renegociações em ${hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})} — ${reneg.length} cliente(s)`,reneg);
-}
+function renderCli(){const c=filt('cli');const rCart=c.reduce((a,x)=>a+(x.renda||0),0);document.getElementById('kpi-cli').innerHTML=kpi('Total Clientes',c.length,'Carteira consolidada','kblue','👤')+kpi('Ativos',c.filter(x=>x.status==='ativo').length,'Contratos vigentes','kgreen','✅')+kpi('Próx. Renovação',c.filter(x=>x.status==='proximo').length,'Atenção','korange','⏰')+kpi('Renda Total',brl(rCart),'Soma da carteira','kpurple','💰');if(!c.length){document.getElementById('tbl-cli').innerHTML=empty();return;}document.getElementById('tbl-cli').innerHTML=`<table><thead><tr><th>Cliente</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th></tr></thead><tbody>${c.map(x=>`<tr onclick="openP('${x._id}')"><td>${avCell(x)}</td><td class="muted">${x.prof}</td><td class="renda">${x.renda?brl(x.renda):'—'}</td><td>${pBadge(x.perfil)}</td><td>${sBadge(x.status)}</td><td class="muted">${x.cidade}</td></tr>`).join('')}</tbody></table><p class="table-hint">👆 Clique para ver o perfil completo</p>`;}
 
 function chMonth(d){despMonth=new Date(despMonth.getFullYear(),despMonth.getMonth()+d,1);renderDesemp();}
 
@@ -905,10 +777,9 @@ function renderDesemp(){
   const totalRec = allClients.filter(x=>x._lk==='recomendados').length;
   const rendaCaptada = cliDoMes.reduce((a,x)=>a+(x.renda||0),0);
 
-  const totalSeguros=cliDoMes.length; // cada cliente = 1 contrato fechado
   document.getElementById('kpi-desemp').innerHTML=
     kpi('Novos Clientes',cliDoMes.length,'Captados no mês','kgreen','✅')+
-    kpi('Seguros Fechados',totalSeguros,'Contratos no mês','kblue','📋')+
+    kpi('Novos Leads',leadsDoMes.length,'Recomendados no mês','kblue','📥')+
     kpi('Total Carteira',totalCli,'Clientes consolidados','kpurple','👤')+
     kpi('Renda Captada',brl(rendaCaptada),'Soma renda novos clientes','korange','💰');
 
@@ -958,35 +829,14 @@ function renderDesemp(){
     document.getElementById('tbl-desemp').innerHTML='<div class="loading" style="padding:24px">Nenhum novo cliente captado em '+meses[despMonth.getMonth()]+' '+despMonth.getFullYear()+'.<br><span style="font-size:11px;color:var(--text3)">Os dados refletem a data de criação da task na lista Clientes do ClickUp.</span></div>';
     return;
   }
-  // Breakdown por perfil de renda
-  const altaC=cliDoMes.filter(x=>norm_str(String(x.perfil)).includes('alta'));
-  const mediaC=cliDoMes.filter(x=>norm_str(String(x.perfil)).includes('media'));
-  const outrosC=cliDoMes.filter(x=>!norm_str(String(x.perfil)).includes('alta')&&!norm_str(String(x.perfil)).includes('media'));
-  document.getElementById('tbl-desemp').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;padding:0 0 16px;border-bottom:1px solid var(--border)">
-      <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Alta Renda</div>
-        <div style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:800;color:var(--blue)">${altaC.length}</div>
-        <div style="font-size:11px;color:var(--text2)">${brl(altaC.reduce((a,x)=>a+(x.renda||0),0))} total</div>
-      </div>
-      <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Média Renda</div>
-        <div style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:800;color:var(--green)">${mediaC.length}</div>
-        <div style="font-size:11px;color:var(--text2)">${brl(mediaC.reduce((a,x)=>a+(x.renda||0),0))} total</div>
-      </div>
-      <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Outros</div>
-        <div style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:800;color:var(--text2)">${outrosC.length}</div>
-        <div style="font-size:11px;color:var(--text2)">${brl(outrosC.reduce((a,x)=>a+(x.renda||0),0))} total</div>
-      </div>
-    </div>
-    <table>
-    <thead><tr><th>Cliente</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Cidade</th><th>Data Captação</th></tr></thead>
+  document.getElementById('tbl-desemp').innerHTML=`<table>
+    <thead><tr><th>Cliente</th><th>Profissão</th><th>Renda Mensal</th><th>Perfil</th><th>Status</th><th>Cidade</th><th>Data Captação</th></tr></thead>
     <tbody>${cliDoMes.map(x=>`<tr onclick="openP('${x._id}')">
       <td>${avCell(x)}</td>
       <td class="muted">${x.prof}</td>
       <td class="renda">${x.renda?brl(x.renda):'—'}</td>
       <td>${pBadge(x.perfil)}</td>
+      <td>${sBadge(x.status)}</td>
       <td class="muted">${x.cidade}</td>
       <td class="muted">${x._at?x._at.toLocaleDateString('pt-BR'):'—'}</td>
     </tr>`).join('')}</tbody></table>`;
@@ -994,7 +844,7 @@ function renderDesemp(){
 
 function goTab(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');btn.classList.add('active');}
 
-function openP(id){const c=allClients.find(x=>x._id===id);if(!c)return;document.getElementById('p-av').textContent=ini(c.nome);document.getElementById('p-name').textContent=c.nome;document.getElementById('p-sub').textContent=[c.prof,c.cidade].filter(x=>x&&x!=='—').join(' · ');document.getElementById('p-badges').innerHTML=pBadge(c.perfil)+' '+sBadge(c.status)+' '+chOr(c._lk);set('d-nome',fv(c.nome));set('d-idade',fv(c.idade,c.idade&&c.idade!=='—'?' anos':''));set('d-nasc',fv(c.nasc));set('d-ecivil',fv(c.ecivil));set('d-prof',fv(c.prof));set('d-dep',fv(c.dep,c.dep&&c.dep!=='—'?' dep.':''));set('d-cidade',fv(c.cidade));set('d-perfil',emt(c.perfil)?'<span class="fv empty">—</span>':pBadge(c.perfil));set('d-email',emt(c.email)?'<span class="fv empty">—</span>':`<a href="mailto:${c.email}" style="color:var(--blue)">${c.email}</a>`);set('d-tel',emt(c.tel)?'<span class="fv empty">—</span>':`<a href="tel:${c.tel}" style="color:var(--blue)">${c.tel}</a>`);document.getElementById('d-renda').textContent=c.renda?brl(c.renda):'—';set('d-ass',fv(c.primeiraproposta));set('d-contrato',fv(c.iniciovigencia));set('d-reneg',fv(c.fimvigencia&&c.fimvigencia!=='—'?c.fimvigencia:c.aniversarioapolice));set('d-status',sBadge(c.status));set('d-cid',fv(c.cid));set('d-lista',`<span class="fv">${c._li} ${c._ll}</span>`);document.getElementById('d-campos').innerHTML=c._all.length?c._all.map(f=>`<div class="cf-item"><span class="cf-key">${f.name}</span><span class="cf-val">${f.val}</span></div>`).join(''):'<span class="fv empty">—</span>';const ob=document.getElementById('d-obs');ob.textContent=!emt(c.obs)?c.obs:'Nenhuma observação.';ob.className='obs-box'+(emt(c.obs)?' empty':'');const lb=document.getElementById('btn-cu');lb.onclick=c._url?()=>window.open(c._url,'_blank'):null;lb.style.opacity=c._url?'1':'.4';sPTab('dados',document.querySelector('.ptab'));document.getElementById('overlay').classList.add('open');document.getElementById('panel').classList.add('open');document.body.style.overflow='hidden';}
+function openP(id){const c=allClients.find(x=>x._id===id);if(!c)return;document.getElementById('p-av').textContent=ini(c.nome);document.getElementById('p-name').textContent=c.nome;document.getElementById('p-sub').textContent=[c.prof,c.cidade].filter(x=>x&&x!=='—').join(' · ');document.getElementById('p-badges').innerHTML=pBadge(c.perfil)+' '+sBadge(c.status)+' '+chOr(c._lk);set('d-nome',fv(c.nome));set('d-idade',fv(c.idade,c.idade&&c.idade!=='—'?' anos':''));set('d-nasc',fv(c.nasc));set('d-ecivil',fv(c.ecivil));set('d-prof',fv(c.prof));set('d-dep',fv(c.dep,c.dep&&c.dep!=='—'?' dep.':''));set('d-cidade',fv(c.cidade));set('d-perfil',emt(c.perfil)?'<span class="fv empty">—</span>':pBadge(c.perfil));set('d-email',emt(c.email)?'<span class="fv empty">—</span>':`<a href="mailto:${c.email}" style="color:var(--blue)">${c.email}</a>`);set('d-tel',emt(c.tel)?'<span class="fv empty">—</span>':`<a href="tel:${c.tel}" style="color:var(--blue)">${c.tel}</a>`);document.getElementById('d-renda').textContent=c.renda?brl(c.renda):'—';set('d-ass',fv(c.primeiraproposta));set('d-contrato',fv(c.iniciovigencia));set('d-reneg',fv(c.aniversarioapolice));set('d-status',sBadge(c.status));set('d-cid',fv(c.cid));set('d-lista',`<span class="fv">${c._li} ${c._ll}</span>`);document.getElementById('d-campos').innerHTML=c._all.length?c._all.map(f=>`<div class="cf-item"><span class="cf-key">${f.name}</span><span class="cf-val">${f.val}</span></div>`).join(''):'<span class="fv empty">—</span>';const ob=document.getElementById('d-obs');ob.textContent=!emt(c.obs)?c.obs:'Nenhuma observação.';ob.className='obs-box'+(emt(c.obs)?' empty':'');const lb=document.getElementById('btn-cu');lb.onclick=c._url?()=>window.open(c._url,'_blank'):null;lb.style.opacity=c._url?'1':'.4';sPTab('dados',document.querySelector('.ptab'));document.getElementById('overlay').classList.add('open');document.getElementById('panel').classList.add('open');document.body.style.overflow='hidden';}
 function closePanel(){document.getElementById('overlay').classList.remove('open');document.getElementById('panel').classList.remove('open');document.body.style.overflow='';}
 function sPTab(n,btn){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));document.getElementById('tc-'+n).classList.add('active');btn.classList.add('active');}
 
@@ -1078,9 +928,9 @@ function kpi(lbl,val,sub,color,icon){return`<div class="kpi ${color}"><div class
 
 function clearFilters(tab){
   if(tab==='geral'){['g-perfil','g-origem','g-cidade','g-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});gFilter='todos';document.querySelectorAll('#page-geral .fbtn').forEach(b=>b.classList.remove('active'));const first=document.querySelector('#page-geral .fbtn');if(first)first.classList.add('active');renderGeral();}
-  else if(tab==='rec'){['r-perfil','r-cidade','r-prof','r-dep','r-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderRec();}
+  else if(tab==='rec'){['r-perfil','r-cidade','r-prof','r-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderRec();}
   else if(tab==='fup'){['f-status','f-perfil','f-cidade','f-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderFup();}
-  else if(tab==='cli'){['c-status','c-perfil','c-cidade','c-prof','c-dep','c-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderCli();}
+  else if(tab==='cli'){['c-status','c-perfil','c-cidade','c-prof','c-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderCli();}
 }
 function openDebugPanel(){
   const ov = document.getElementById('debug-ov');
@@ -1108,10 +958,7 @@ function openDebugPanel(){
         </tr></thead>
         <tbody>
           ${(c._rawFields||[]).map(f=>{
-            const lido = (()=>{
-  if(f.id==='c27ca4cd-0f79-4812-9f0b-f83ce46621e2') return c.dep_num??'—';
-  return allClients.find(x=>x._id===c._id)?.[f.name] ?? gcf({custom_fields:c._rawFields},f.name) ?? '—';
-})();
+            const lido = allClients.find(x=>x._id===c._id)?.[f.name] ?? gcf({custom_fields:c._rawFields},f.name) ?? '—';
             const vRaw = f.type==='drop_down'?`orderindex:${f.value}`:(f.value??'null');
             const ok = lido&&lido!=='—';
             return `<tr style="border-bottom:1px solid var(--border)">
@@ -1130,181 +977,8 @@ function openDebugPanel(){
   ov.classList.add('open');
 }
 
-// ── EXCEL EXPORT ──────────────────────────────────────────────
-function exportExcel(){
-  if(!allClients.length){ showToast('⚠️ Carregue os dados primeiro.'); return; }
-  const wb = XLSX.utils.book_new();
-  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const hoje = new Date();
-  const dataStr = hoje.toLocaleDateString('pt-BR');
-
-  // Cabeçalho Prudential
-  const cabecalho = [
-    ['PRUDENTIAL DO BRASIL — CRM LIFE PLANNER','','','','','','',''],
-    [`Relatório gerado em: ${dataStr}`,'','','','','','',''],
-    ['','','','','','','',''],
-  ];
-
-  // Aba 1 — Carteira de Clientes
-  const cli = allClients.filter(x=>x._lk==='clientes');
-  const cliData = [
-    ...cabecalho,
-    ['CARTEIRA DE CLIENTES CONSOLIDADOS','','','','','','',''],
-    ['','','','','','','',''],
-    ['Nome','Profissão','Renda Mensal (R$)','Perfil','Status','Cidade','Fim Vigência','Dependentes'],
-    ...cli.map(x=>[x.nome,x.prof,x.renda||0,x.perfil,x.status,x.cidade,x.fimvigencia||'—',x.dep_num||0])
-  ];
-  const wsCli = XLSX.utils.aoa_to_sheet(cliData);
-  // Larguras das colunas
-  wsCli['!cols']=[{wch:30},{wch:20},{wch:18},{wch:15},{wch:15},{wch:18},{wch:15},{wch:12}];
-  // Estilo do cabeçalho (merge)
-  wsCli['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}}];
-  XLSX.utils.book_append_sheet(wb, wsCli, 'Clientes');
-
-  // Aba 2 — Leads Recomendados
-  const rec = allClients.filter(x=>x._lk==='recomendados');
-  const recData = [
-    ...cabecalho,
-    ['LEADS RECOMENDADOS','','','','','','',''],
-    ['','','','','','','',''],
-    ['Nome','Profissão','Renda Mensal (R$)','Perfil','Status','Cidade','E-mail','Telefone'],
-    ...rec.map(x=>[x.nome,x.prof,x.renda||0,x.perfil,x.status,x.cidade,x.email||'',x.tel||''])
-  ];
-  const wsRec = XLSX.utils.aoa_to_sheet(recData);
-  wsRec['!cols']=[{wch:30},{wch:20},{wch:18},{wch:15},{wch:15},{wch:18},{wch:28},{wch:18}];
-  wsRec['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}}];
-  XLSX.utils.book_append_sheet(wb, wsRec, 'Recomendados');
-
-  // Aba 3 — Resumo Executivo
-  const rendaMedia = cli.length?Math.round(cli.reduce((a,x)=>a+(x.renda||0),0)/cli.length):0;
-  const altaC = cli.filter(x=>norm_str(String(x.perfil)).includes('alta')).length;
-  const mediaC = cli.filter(x=>norm_str(String(x.perfil)).includes('media')).length;
-  const reneg = cli.filter(x=>isRenegMes(x)).length;
-  const resumoData = [
-    ...cabecalho,
-    ['RESUMO EXECUTIVO','',''],
-    ['','',''],
-    ['Indicador','Valor',''],
-    ['Total de Clientes',cli.length,''],
-    ['Total de Leads Recomendados',rec.length,''],
-    ['Follow-Up',allClients.filter(x=>x._lk==='followup').length,''],
-    ['Clientes Ativos',cli.filter(x=>x.status==='ativo').length,''],
-    ['Renda Média da Carteira',`R$ ${rendaMedia.toLocaleString('pt-BR')}`,''],
-    ['Clientes Alta Renda',altaC,''],
-    ['Clientes Média Renda',mediaC,''],
-    [`Renegociações em ${meses[hoje.getMonth()]}/${hoje.getFullYear()}`,reneg,''],
-    ['','',''],
-    ['Profissões mais frequentes (Top 5)','Clientes','Renda Média'],
-    ...(() => {
-      const m={};
-      cli.forEach(x=>{if(!m[x.prof])m[x.prof]={n:0,t:0};m[x.prof].n++;m[x.prof].t+=x.renda||0;});
-      return Object.entries(m).sort((a,b)=>b[1].n-a[1].n).slice(0,5)
-        .map(([k,v])=>[k,v.n,`R$ ${Math.round(v.t/v.n).toLocaleString('pt-BR')}`]);
-    })(),
-  ];
-  const wsRes = XLSX.utils.aoa_to_sheet(resumoData);
-  wsRes['!cols']=[{wch:35},{wch:20},{wch:20}];
-  wsRes['!merges']=[{s:{r:0,c:0},e:{r:0,c:2}}];
-  XLSX.utils.book_append_sheet(wb, wsRes, 'Resumo Executivo');
-
-  // Download
-  XLSX.writeFile(wb, `Prudential_CRM_${hoje.toLocaleDateString('pt-BR').replace(/\//g,'-')}.xlsx`);
-  showToast('✅ Relatório Excel exportado com sucesso!');
-}
-
-// ── NOTIFICAÇÕES ──────────────────────────────────────────────
-let notifList = [];
-
-function buildNotifs(){
-  notifList = [];
-  const cli = allClients.filter(x=>x._lk==='clientes');
-  const hoje = new Date();
-
-  // Renegociações no mês
-  const reneg = cli.filter(x=>isRenegMes(x));
-  if(reneg.length){
-    notifList.push({
-      icon:'⚠️', tipo:'reneg',
-      title:`${reneg.length} cliente(s) com renegociação este mês`,
-      sub: reneg.slice(0,3).map(x=>x.nome).join(', ')+(reneg.length>3?` e mais ${reneg.length-3}`:''),
-      action: ()=>openRenegModal()
-    });
-  }
-
-  // Renegociações nos próximos 30 dias
-  const prox30 = cli.filter(x=>{
-    if(!x.fimvigencia||x.fimvigencia==='—') return false;
-    const pts=x.fimvigencia.split('/'); if(pts.length<3) return false;
-    const d=new Date(pts[2],pts[1]-1,pts[0]);
-    const diff=(d-hoje)/(1000*60*60*24);
-    return diff>0 && diff<=30 && !isRenegMes(x);
-  });
-  if(prox30.length){
-    notifList.push({
-      icon:'📅', tipo:'prox',
-      title:`${prox30.length} renegociação(ões) nos próximos 30 dias`,
-      sub: prox30.slice(0,2).map(x=>`${x.nome} · ${x.fimvigencia}`).join(' | '),
-      action: ()=>goTab('clientes',document.querySelectorAll('.tab')[3])
-    });
-  }
-
-  // Novos leads hoje
-  const hoje0 = new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
-  const novosHoje = allClients.filter(x=>x._lk==='recomendados'&&x._at&&x._at>=hoje0);
-  if(novosHoje.length){
-    notifList.push({
-      icon:'⭐', tipo:'lead',
-      title:`${novosHoje.length} novo(s) lead(s) adicionado(s) hoje`,
-      sub: novosHoje.slice(0,2).map(x=>x.nome).join(', '),
-      action: ()=>goTab('recomendados',document.querySelectorAll('.tab')[1])
-    });
-  }
-
-  // Atualiza badge
-  const badge = document.getElementById('notif-badge');
-  if(notifList.length){badge.textContent=notifList.length;badge.classList.add('show');}
-  else{badge.classList.remove('show');}
-
-  // Render lista
-  const list = document.getElementById('notif-list');
-  list.innerHTML = notifList.length
-    ? notifList.map((n,i)=>`
-        <div class="notif-item" onclick="notifList[${i}].action();toggleNotif()">
-          <div class="notif-item-title">${n.icon} ${n.title}</div>
-          <div class="notif-item-sub">${n.sub}</div>
-        </div>`).join('')
-    : '<div class="notif-empty">Tudo em dia ✅</div>';
-
-  // Popup automático de renegociação
-  if(reneg.length){
-    const popup = document.getElementById('reneg-popup');
-    const body = document.getElementById('reneg-popup-body');
-    body.innerHTML = reneg.slice(0,5).map(x=>`<div style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>${x.nome}</span><span style="color:var(--orange)">${x.fimvigencia}</span></div>`).join('')
-      + (reneg.length>5?`<div style="padding:3px 0;color:var(--text3)">+ ${reneg.length-5} outros</div>`:'');
-    setTimeout(()=>popup.classList.add('show'), 1500);
-  }
-}
-
-function toggleNotif(){
-  document.getElementById('notif-panel').classList.toggle('open');
-}
-function clearNotifs(){
-  notifList=[];
-  document.getElementById('notif-badge').classList.remove('show');
-  document.getElementById('notif-list').innerHTML='<div class="notif-empty">Tudo em dia ✅</div>';
-  document.getElementById('notif-panel').classList.remove('open');
-}
-
-// Fecha notif ao clicar fora
-document.addEventListener('click',e=>{
-  const panel=document.getElementById('notif-panel');
-  const btn=document.getElementById('notif-btn');
-  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
-    panel.classList.remove('open');
-  }
-});
-
 setInterval(()=>{if(currentUser&&allClients.length)loadAll();},180000);
 </script>
 </body>
 </html>
+
