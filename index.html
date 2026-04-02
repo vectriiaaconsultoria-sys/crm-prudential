@@ -473,7 +473,7 @@ td.muted{color:var(--text2);}
           <div class="fi"><div class="fl">Nascimento</div><div class="fv" id="d-nasc">—</div></div>
           <div class="fi"><div class="fl">Estado Civil</div><div class="fv" id="d-ecivil">—</div></div>
           <div class="fi"><div class="fl">Profissão</div><div class="fv" id="d-prof">—</div></div>
-          <div class="fi"><div class="fl">Dependentes &lt;13</div><div class="fv" id="d-dep">—</div></div>
+          <div class="fi"><div class="fl">Quantidade de Filhos</div><div class="fv" id="d-dep">—</div></div>
           <div class="fi"><div class="fl">Quantidade de Filhos</div><div class="fv" id="d-filhos">—</div></div>
           <div class="fi"><div class="fl">Cidade</div><div class="fv" id="d-cidade">—</div></div>
           <div class="fi"><div class="fl">Perfil de Renda</div><div class="fv" id="d-perfil">—</div></div>
@@ -710,8 +710,8 @@ function allcf(t){
   }).filter(x=>x.val&&x.val!==''&&x.val!=='null');
 }
 function norm(t,lk){const _rawFields=t.custom_fields||[];const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcfById(t,'d76977b4-2659-4422-b686-f50d9e5255f0'),
-  qtd_filhos:gcfById(t,'c27ca4cd-0f79-4812-9f0b-f83ce46621e2'),
-  dep_num:(()=>{const f=(t.custom_fields||[]).find(x=>x.id==='c27ca4cd-0f79-4812-9f0b-f83ce46621e2');if(!f||f.value===null||f.value===undefined)return 0;return parseFloat(String(f.value))||0;})(),
+  qtd_filhos:gcfById(t,'d76977b4-2659-4422-b686-f50d9e5255f0'),
+  dep_num:(()=>{const f=(t.custom_fields||[]).find(x=>x.id==='d76977b4-2659-4422-b686-f50d9e5255f0');if(!f||f.value===null||f.value===undefined)return 0;return parseFloat(String(f.value))||0;})(),
   email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',fimvigencia:gcf(t,'data_fim_vigencia')||gcf(t,'datafimvigencia')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—',_rawFields};}
 function nStatus(s){if(!s)return'novo lead';const sl=String(s).toLowerCase().trim();if(sl.includes('ativo')||sl==='active')return'ativo';if(sl.includes('próximo')||sl.includes('proximo')||sl.includes('1 ano'))return'proximo';if(sl.includes('aniversário')||sl.includes('aniversario'))return'aniversario';if(sl.includes('novo')||sl.includes('lead'))return'novo lead';return sl;}
 
