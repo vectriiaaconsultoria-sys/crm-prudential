@@ -571,7 +571,12 @@ async function doLogin(){
     const name = profile?.nome || data.user.email.split('@')[0];
     currentUser = { id: data.user.id, email: data.user.email, name, role: profile?.role || 'corretor' };
 
-    // 3. Registra último acesso (ignora erro se função não existir ainda)
+    // 3. Salva preferência de "manter conectado"
+    const manter = document.getElementById('auth-remember')?.checked !== false;
+    localStorage.setItem('crm_manter', manter ? 'true' : 'false');
+    if(!manter) await sb.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
+
+    // 4. Registra último acesso (ignora erro se função não existir ainda)
     try { await sb.rpc('registrar_acesso', { user_id: data.user.id }); } catch(e){}
 
     showApp();
@@ -586,6 +591,7 @@ async function doLogin(){
 }
 
 async function doLogout(){
+  localStorage.setItem('crm_manter', 'false');
   await sb.auth.signOut();
   currentUser=null;
   document.getElementById('app-hdr').style.display='none';
@@ -608,8 +614,14 @@ function showApp(){
 
 document.getElementById('auth-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
-// Verifica sessão ativa ao carregar a página
+// Verifica sessão salva — só restaura se usuário marcou "Manter conectado"
 (async()=>{
+  const manter = localStorage.getItem('crm_manter') === 'true';
+  if(!manter){
+    // Sem permissão para restaurar — faz logout silencioso e mostra login
+    await sb.auth.signOut();
+    return;
+  }
   const { data: { session } } = await sb.auth.getSession();
   if(session){
     const { data: profile } = await sb.from('crm_users').select('nome, email, role').eq('id', session.user.id).single();
@@ -684,7 +696,18 @@ function allcf(t){
     return{name:f.name,val:v};
   }).filter(x=>x.val&&x.val!==''&&x.val!=='null');
 }
-function norm(t,lk){const _rawFields=t.custom_fields||[];const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcf(t,'qtd_dependentes_menor_13')||'—',email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',fimvigencia:gcf(t,'data_fim_vigencia')||gcf(t,'datafimvigencia')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',dep_num:(()=>{const f=(t.custom_fields||[]).find(x=>x.id==='c27ca4cd-0f79-4812-9f0b-f83ce46621e2');return f&&f.value!==null&&f.value!==undefined?parseFloat(String(f.value))||0:0;})(),cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—',_rawFields};}
+function norm(t,lk){const _rawFields=t.custom_fields||[];const r=parseFloat(String(gcf(t,'renda_mensal')||gcf(t,'renda')||0).replace(/[^\d.,]/g,'').replace(',','.'))||0;const sr=gcf(t,'status_apolice')||t.status?.status||'novo lead';return{_id:t.id,_url:t.url,_lk:lk,_ll:LISTS[lk].label,_li:LISTS[lk].icon,_all:allcf(t),_at:t.date_created?new Date(Number(t.date_created)):null,nome:gcf(t,'nome')||t.name||'—',prof:gcf(t,'profissao')||gcf(t,'profissão')||'—',renda:r,perfil:gcf(t,'perfil_renda')||gcf(t,'perfil')||'—',status:nStatus(sr),cidade:gcf(t,'cidade')||'—',nasc:gcf(t,'data_nascimento')||'—',idade:gcf(t,'idade')||'—',ecivil:gcf(t,'estado_civil')||'—',dep:gcf(t,'qtd_dependentes_menor_13')||'—',email:gcf(t,'email')||'—',tel:gcf(t,'telefone')||'—',primeiraproposta:gcf(t,'data_assinatura_primeira_proposta')||gcf(t,'data_primeiraproposta')||gcf(t,'data_assinatura')||'—',iniciovigencia:gcf(t,'data_inicio_vigencia')||gcf(t,'data_iniciovigencia')||gcf(t,'data_contrato')||'—',aniversarioapolice:gcf(t,'data_aniversario_apolice')||gcf(t,'aniversario_apolice')||'—',fimvigencia:gcf(t,'data_fim_vigencia')||gcf(t,'datafimvigencia')||'—',reneg:gcf(t,'data_renegociacao_contrato')||'—',dep_num:(()=>{
+  const fields = t.custom_fields||[];
+  // Primeiro tenta pelo ID exato
+  let f = fields.find(x=>x.id==='c27ca4cd-0f79-4812-9f0b-f83ce46621e2');
+  // Fallback: tenta por nome normalizado
+  if(!f) f = fields.find(x=>x.name&&norm_str(x.name).includes('filhos'));
+  if(!f) f = fields.find(x=>x.name&&norm_str(x.name).includes('dependente'));
+  if(!f||f.value===null||f.value===undefined) return 0;
+  // Pode vir como number, string ou objeto
+  const v = typeof f.value === 'object' ? JSON.stringify(f.value) : f.value;
+  return parseFloat(String(v).replace(/[^\d.]/g,''))||0;
+})(),cid:gcf(t,'clientid')||gcf(t,'client_id')||t.id,obs:gcf(t,'observacoes_importantes_do_cliente')||gcf(t,'observacoes')||'—',_rawFields};}
 function nStatus(s){if(!s)return'novo lead';const sl=String(s).toLowerCase().trim();if(sl.includes('ativo')||sl==='active')return'ativo';if(sl.includes('próximo')||sl.includes('proximo')||sl.includes('1 ano'))return'proximo';if(sl.includes('aniversário')||sl.includes('aniversario'))return'aniversario';if(sl.includes('novo')||sl.includes('lead'))return'novo lead';return sl;}
 
 async function loadAll(){
@@ -1087,7 +1110,10 @@ function openDebugPanel(){
         </tr></thead>
         <tbody>
           ${(c._rawFields||[]).map(f=>{
-            const lido = allClients.find(x=>x._id===c._id)?.[f.name] ?? gcf({custom_fields:c._rawFields},f.name) ?? '—';
+            const lido = (()=>{
+  if(f.id==='c27ca4cd-0f79-4812-9f0b-f83ce46621e2') return c.dep_num??'—';
+  return allClients.find(x=>x._id===c._id)?.[f.name] ?? gcf({custom_fields:c._rawFields},f.name) ?? '—';
+})();
             const vRaw = f.type==='drop_down'?`orderindex:${f.value}`:(f.value??'null');
             const ok = lido&&lido!=='—';
             return `<tr style="border-bottom:1px solid var(--border)">
