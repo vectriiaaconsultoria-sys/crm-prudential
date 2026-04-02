@@ -637,7 +637,7 @@ document.documentElement.setAttribute('data-theme',savedTheme);
 document.getElementById('theme-btn').textContent=savedTheme==='dark'?'🌙':'☀️';
 function toggleTheme(){const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);localStorage.setItem('crm_theme',t);document.getElementById('theme-btn').textContent=t==='dark'?'🌙':'☀️';if(allClients.length){renderChartsGeral(allClients.filter(x=>x._lk==='clientes'));renderDesemp();}}
 
-async function fetchList(key){const{id,label}=LISTS[key];let page=0,tasks=[];while(true){const r=await fetch(`https://api.clickup.com/api/v2/list/${id}/task?include_closed=true&page=${page}&limit=100&custom_fields=true`,{headers:{Authorization:API_KEY}});if(!r.ok)throw new Error(`${label}: ${r.status}`);const d=await r.json();const b=d.tasks||[];tasks=tasks.concat(b);if(b.length<100)break;page++;}return tasks.map(t=>norm(t,key));}
+async function fetchList(key){const{id,label}=LISTS[key];let page=0,tasks=[];while(true){const r=await fetch(`https://api.clickup.com/api/v2/list/${id}/task?include_closed=true&page=${page}&limit=100`,{headers:{Authorization:API_KEY}});if(!r.ok)throw new Error(`${label}: ${r.status}`);const d=await r.json();const b=d.tasks||[];tasks=tasks.concat(b);if(b.length<100)break;page++;}return tasks.map(t=>norm(t,key));}
 
 // Normaliza string para comparação: minúsculas, sem acento, sem espaço/underscore
 function norm_str(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s_\-]/g,''); }
